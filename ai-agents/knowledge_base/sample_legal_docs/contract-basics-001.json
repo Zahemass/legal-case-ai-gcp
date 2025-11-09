@@ -1,0 +1,10 @@
+{
+  "id": "contract-basics-001",
+  "title": "Contract Formation Basics",
+  "content": "Contract Formation Requirements:\n\n1. Offer: A clear proposal with definite terms\n2. Acceptance: Unqualified agreement to the offer\n3. Consideration: Something of value exchanged\n4. Mutual assent: Both parties understand and agree\n5. Legal capacity: Parties must be legally able to contract\n6. Lawful purpose: Contract cannot be for illegal activities\n\nKey Principles:\n- Contracts must be supported by consideration\n- Terms should be clear and unambiguous\n- Performance obligations must be defined\n- Breach remedies should be specified\n\nCommon Contract Types:\n- Service agreements\n- Employment contracts\n- Sales contracts\n- Licensing agreements\n- Non-disclosure agreements\n\nBreach of Contract:\n- Material breach vs. minor breach\n- Anticipatory breach\n- Remedies: damages, specific performance, rescission\n- Mitigation of damages\n\nContract Interpretation:\n- Plain meaning rule\n- Parol evidence rule\n- Contra proferentem (against the drafter)\n- Course of dealing and usage of trade",
+  "category": "contract_law",
+  "datastore": "legal-knowledge-primary",
+  "tags": ["contracts", "formation", "basics", "legal_principles"],
+  "created_date": "2025-01-01",
+  "author": "Legal Knowledge Base"
+}

@@ -1,0 +1,259 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && 
+             request.auth.token.role == 'admin';
+    }
+    
+    // Helper function to check if user is super admin
+    function isSuperAdmin() {
+      return request.auth != null && 
+             request.auth.token.role == 'super_admin';
+    }
+    
+    // Helper function to check case ownership
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Helper function to check case access
+    function hasCaseAccess(caseId) {
+      return exists(/databases/$(database)/documents/cases/$(caseId)) &&
+             (get(/databases/$(database)/documents/cases/$(caseId)).data.createdBy == request.auth.uid ||
+              isAdmin());
+    }
+    
+    // Users collection - users can read/write their own profile
+    match /users/{userId} {
+      allow read, write: if isAuthenticated() && 
+                           (isOwner(userId) || isAdmin());
+      allow create: if isAuthenticated() && isOwner(userId);
+    }
+    
+    // Cases collection - users can only access their own cases
+    match /cases/{caseId} {
+      allow read, write: if isAuthenticated() && 
+                           (resource.data.createdBy == request.auth.uid || 
+                            isAdmin());
+      allow create: if isAuthenticated() && 
+                      request.resource.data.createdBy == request.auth.uid;
+    }
+    
+    // Documents collection - access based on case ownership
+    match /documents/{documentId} {
+      allow read, write: if isAuthenticated() && 
+                           hasCaseAccess(resource.data.caseId);
+      allow create: if isAuthenticated() && 
+                      hasCaseAccess(request.resource.data.caseId);
+    }
+    
+    // Extracted documents - same access as documents
+    match /extracted_documents/{extractedId} {
+      allow read, write: if isAuthenticated() && 
+                           hasCaseAccess(resource.data.caseId);
+      allow create: if isAuthenticated() && 
+                      hasCaseAccess(request.resource.data.caseId);
+    }
+    
+    // Document analysis - same access as documents
+    match /document_analysis/{analysisId} {
+      allow read, write: if isAuthenticated() && 
+                           hasCaseAccess(resource.data.caseId);
+      allow create: if isAuthenticated() && 
+                      hasCaseAccess(request.resource.data.caseId);
+    }
+    
+    // Case analysis - same access as cases
+    match /case_analysis/{analysisId} {
+      allow read, write: if isAuthenticated() && 
+                           hasCaseAccess(resource.data.caseId);
+      allow create: if isAuthenticated() && 
+                      hasCaseAccess(request.resource.data.caseId);
+    }
+    
+    // Chat messages - users can access messages for their cases
+    match /chat_messages/{messageId} {
+      allow read: if isAuthenticated() && 
+                    (isOwner(resource.data.userId) || 
+                     hasCaseAccess(resource.data.caseId));
+      allow write: if isAuthenticated() && 
+                     (isOwner(resource.data.userId) || 
+                      hasCaseAccess(resource.data.caseId));
+      allow create: if isAuthenticated() && 
+                      (isOwner(request.resource.data.userId) || 
+                       hasCaseAccess(request.resource.data.caseId));
+    }
+    
+    // User activities - users can read their own activities, services can write
+    match /user_activities/{activityId} {
+      allow read: if isAuthenticated() && 
+                    (isOwner(resource.data.userId) || isAdmin());
+      allow write: if isAuthenticated();
+      allow create: if isAuthenticated();
+    }
+    
+    // PDF reports - same access as cases
+    match /pdf_reports/{reportId} {
+      allow read, write: if isAuthenticated() && 
+                           hasCaseAccess(resource.data.caseId);
+      allow create: if isAuthenticated() && 
+                      hasCaseAccess(request.resource.data.caseId);
+    }
+    
+    // Notifications - users can access their own notifications
+    match /notifications/{notificationId} {
+      allow read, write: if isAuthenticated() && 
+                           isOwner(resource.data.userId);
+      allow create: if isAuthenticated() && 
+                      isOwner(request.resource.data.userId);
+    }
+    
+    // System logs - admin and service accounts only
+    match /system_logs/{logId} {
+      allow read: if isAdmin();
+      allow write: if isAuthenticated();
+      allow create: if isAuthenticated();
+    }
+    
+    // Extraction errors - admin and service accounts only
+    match /extraction_errors/{errorId} {
+      allow read: if isAdmin();
+      allow write: if isAuthenticated();
+      allow create: if isAuthenticated();
+    }
+    
+    // System configuration - admin only read, super admin write
+    match /system_config/{configId} {
+      allow read: if isAdmin();
+      allow write: if isSuperAdmin();
+    }
+    
+    // Email templates - admin only
+    match /email_templates/{templateId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // API keys and secrets - super admin only
+    match /api_keys/{keyId} {
+      allow read, write: if isSuperAdmin();
+    }
+    
+    // Usage analytics - admin read only
+    match /analytics/{analyticsId} {
+      allow read: if isAdmin();
+      allow write: if isAuthenticated();
+    }
+    
+    // Audit logs - admin read only, system write only
+    match /audit_logs/{auditId} {
+      allow read: if isAdmin();
+      allow write: if isAuthenticated();
+    }
+    
+    // Backup metadata - admin only
+    match /backups/{backupId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // Service health and status - admin read, service write
+    match /service_status/{serviceId} {
+      allow read: if isAdmin();
+      allow write: if isAuthenticated();
+    }
+    
+    // User preferences and settings
+    match /user_preferences/{userId} {
+      allow read, write: if isAuthenticated() && 
+                           (isOwner(userId) || isAdmin());
+    }
+    
+    // Subscription and billing info - user and admin access
+    match /subscriptions/{userId} {
+      allow read, write: if isAuthenticated() && 
+                           (isOwner(userId) || isAdmin());
+    }
+    
+    // Feature flags - admin read, super admin write
+    match /feature_flags/{flagId} {
+      allow read: if isAuthenticated();
+      allow write: if isSuperAdmin();
+    }
+    
+    // AI model configurations - admin only
+    match /ai_models/{modelId} {
+      allow read: if isAdmin();
+      allow write: if isSuperAdmin();
+    }
+    
+    // Legal knowledge base - read for authenticated users, write for admin
+    match /knowledge_base/{entryId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // Case templates - read for authenticated users, write for admin
+    match /case_templates/{templateId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // Document templates - read for authenticated users, write for admin
+    match /document_templates/{templateId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // Collaboration and sharing
+    match /shared_cases/{shareId} {
+      allow read: if isAuthenticated() && 
+                    (resource.data.sharedWith[request.auth.uid] != null || 
+                     hasCaseAccess(resource.data.caseId));
+      allow write: if isAuthenticated() && 
+                     hasCaseAccess(resource.data.caseId);
+    }
+    
+    // Comments and annotations
+    match /comments/{commentId} {
+      allow read: if isAuthenticated() && 
+                    hasCaseAccess(resource.data.caseId);
+      allow write: if isAuthenticated() && 
+                     (isOwner(resource.data.userId) || 
+                      hasCaseAccess(resource.data.caseId));
+      allow create: if isAuthenticated() && 
+                      hasCaseAccess(request.resource.data.caseId);
+    }
+    
+    // Workflow and task management
+    match /workflows/{workflowId} {
+      allow read, write: if isAuthenticated() && 
+                           hasCaseAccess(resource.data.caseId);
+    }
+    
+    match /tasks/{taskId} {
+      allow read, write: if isAuthenticated() && 
+                           (isOwner(resource.data.assignedTo) || 
+                            hasCaseAccess(resource.data.caseId));
+    }
+    
+    // Integration configurations - user specific
+    match /integrations/{userId} {
+      allow read, write: if isAuthenticated() && 
+                           (isOwner(userId) || isAdmin());
+    }
+    
+    // Default deny rule - explicitly deny access to any other documents
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

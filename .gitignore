@@ -1,0 +1,98 @@
+# ----------------------------
+# OS / Editor junk
+# ----------------------------
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+.history/
+
+# ----------------------------
+# Logs & reports
+# ----------------------------
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+pip-log.txt
+coverage/
+.htmlcov/
+.coverage*
+pytestdebug.log
+
+# ----------------------------
+# Node / Frontend
+# ----------------------------
+**/node_modules/
+**/dist/
+**/build/
+**/.next/
+**/.nuxt/
+**/.turbo/
+# Keep lock files – they are important for reproducible builds
+# (so DO NOT ignore package-lock.json / pnpm-lock.yaml / yarn.lock)
+
+# ----------------------------
+# Python
+# ----------------------------
+**/__pycache__/
+**/*.py[cod]
+**/*.pyo
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/.ipynb_checkpoints/
+venv/
+.venv/
+ENV/
+env/
+
+# ----------------------------
+# Env files & secrets (very important)
+# ----------------------------
+# Ignore all .env files anywhere
+*.env
+*.env.*
+.env
+# But allow example env files
+!**/env.example
+!**/.env.example
+
+# Common secret key files (Google service accounts, etc.)
+**/key*.json
+**/keys/*.json
+# If you need to keep a template, create and commit key.sample.json instead
+
+# ----------------------------
+# Firebase/Firestore (keep rules, ignore local emulator data)
+# ----------------------------
+# Keep firestore.rules, storage.rules, etc. (do NOT ignore them)
+# Ignore local emulator data if present
+.firebase/*
+database-debug.log
+
+# ----------------------------
+# Terraform
+# ----------------------------
+**/.terraform/
+**/.terraform.lock.hcl
+**/*.tfstate
+**/*.tfstate.*
+
+# ----------------------------
+# Docker (ignore all Docker-related build files)
+# ----------------------------
+**/Dockerfile
+**/.dockerignore
+
+# ----------------------------
+# Misc build caches
+# ----------------------------
+*.egg-info/
+.eggs/
+.parcel-cache/
+.cache/

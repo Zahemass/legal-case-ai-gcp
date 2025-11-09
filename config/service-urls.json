@@ -1,0 +1,380 @@
+{
+  "name": "Legal Case AI Service URLs Configuration",
+  "version": "1.0.0",
+  "created": "2025-11-01T10:10:34Z",
+  "createdBy": "Zahemassg",
+  "description": "Configuration file containing all service URLs and endpoints for the Legal Case AI platform",
+  
+  "environments": {
+    "development": {
+      "services": {
+        "main-api": {
+          "url": "http://localhost:3000",
+          "healthCheck": "/health",
+          "docs": "/docs",
+          "version": "/api/version"
+        },
+        "document-upload-service": {
+          "url": "http://localhost:8081",
+          "healthCheck": "/health",
+          "upload": "/upload",
+          "webhook": "/webhook"
+        },
+        "text-extraction-service": {
+          "url": "http://localhost:8082",
+          "healthCheck": "/health",
+          "extract": "/extract",
+          "status": "/status"
+        },
+        "case-analysis-service": {
+          "url": "http://localhost:8083",
+          "healthCheck": "/health", 
+          "analyze": "/analyze",
+          "status": "/status"
+        },
+        "ai-agent-service": {
+          "url": "http://localhost:8084",
+          "healthCheck": "/health",
+          "chat": "/chat",
+          "websocket": "/ws"
+        },
+        "pdf-generator-service": {
+          "url": "http://localhost:8085",
+          "healthCheck": "/health",
+          "generate": "/generate",
+          "download": "/download"
+        },
+        "email-service": {
+          "url": "http://localhost:8086",
+          "healthCheck": "/health",
+          "send": "/send",
+          "template": "/template"
+        }
+      },
+      "frontend": {
+        "web": "http://localhost:3001",
+        "admin": "http://localhost:3002"
+      },
+      "databases": {
+        "firestore": "localhost:8080",
+        "redis": "localhost:6379"
+      }
+    },
+    
+    "staging": {
+      "services": {
+        "main-api": {
+          "url": "https://main-api-staging-abc123-uc.a.run.app",
+          "healthCheck": "/health",
+          "docs": "/docs",
+          "version": "/api/version"
+        },
+        "document-upload-service": {
+          "url": "https://document-upload-staging-abc123-uc.a.run.app",
+          "healthCheck": "/health",
+          "upload": "/upload",
+          "webhook": "/webhook"
+        },
+        "text-extraction-service": {
+          "url": "https://text-extraction-staging-abc123-uc.a.run.app",
+          "healthCheck": "/health",
+          "extract": "/extract",
+          "status": "/status"
+        },
+        "case-analysis-service": {
+          "url": "https://case-analysis-staging-abc123-uc.a.run.app",
+          "healthCheck": "/health",
+          "analyze": "/analyze", 
+          "status": "/status"
+        },
+        "ai-agent-service": {
+          "url": "https://ai-agent-staging-abc123-uc.a.run.app",
+          "healthCheck": "/health",
+          "chat": "/chat",
+          "websocket": "/ws"
+        },
+        "pdf-generator-service": {
+          "url": "https://pdf-generator-staging-abc123-uc.a.run.app",
+          "healthCheck": "/health",
+          "generate": "/generate",
+          "download": "/download"
+        },
+        "email-service": {
+          "url": "https://email-service-staging-abc123-uc.a.run.app",
+          "healthCheck": "/health",
+          "send": "/send",
+          "template": "/template"
+        }
+      },
+      "frontend": {
+        "web": "https://staging.legalcaseai.com",
+        "admin": "https://admin-staging.legalcaseai.com"
+      },
+      "databases": {
+        "firestore": "staging-project-id",
+        "redis": "staging-redis-url"
+      }
+    },
+    
+    "production": {
+      "services": {
+        "main-api": {
+          "url": "https://api.legalcaseai.com",
+          "healthCheck": "/health",
+          "docs": "/docs",
+          "version": "/api/version"
+        },
+        "document-upload-service": {
+          "url": "https://upload.legalcaseai.com",
+          "healthCheck": "/health",
+          "upload": "/upload",
+          "webhook": "/webhook"
+        },
+        "text-extraction-service": {
+          "url": "https://extraction.legalcaseai.com",
+          "healthCheck": "/health",
+          "extract": "/extract",
+          "status": "/status"
+        },
+        "case-analysis-service": {
+          "url": "https://analysis.legalcaseai.com",
+          "healthCheck": "/health",
+          "analyze": "/analyze",
+          "status": "/status"
+        },
+        "ai-agent-service": {
+          "url": "https://chat.legalcaseai.com",
+          "healthCheck": "/health",
+          "chat": "/chat",
+          "websocket": "/ws"
+        },
+        "pdf-generator-service": {
+          "url": "https://reports.legalcaseai.com",
+          "healthCheck": "/health",
+          "generate": "/generate",
+          "download": "/download"
+        },
+        "email-service": {
+          "url": "https://email.legalcaseai.com",
+          "healthCheck": "/health",
+          "send": "/send",
+          "template": "/template"
+        }
+      },
+      "frontend": {
+        "web": "https://app.legalcaseai.com",
+        "admin": "https://admin.legalcaseai.com"
+      },
+      "databases": {
+        "firestore": "legal-case-ai-prod",
+        "redis": "production-redis-url"
+      }
+    }
+  },
+  
+  "apiEndpoints": {
+    "authentication": {
+      "login": "/auth/login",
+      "logout": "/auth/logout",
+      "register": "/auth/register",
+      "refresh": "/auth/refresh",
+      "verify": "/auth/verify",
+      "reset": "/auth/reset-password"
+    },
+    
+    "cases": {
+      "list": "/api/cases",
+      "create": "/api/cases",
+      "get": "/api/cases/:id",
+      "update": "/api/cases/:id",
+      "delete": "/api/cases/:id",
+      "analyze": "/api/cases/:id/analyze"
+    },
+    
+    "documents": {
+      "upload": "/api/documents/upload",
+      "list": "/api/cases/:caseId/documents",
+      "get": "/api/documents/:id",
+      "download": "/api/documents/:id/download",
+      "delete": "/api/documents/:id",
+      "extract": "/api/documents/:id/extract"
+    },
+    
+    "analysis": {
+      "document": "/api/documents/:id/analyze",
+      "case": "/api/cases/:id/analyze",
+      "status": "/api/analysis/:id/status",
+      "results": "/api/analysis/:id/results"
+    },
+    
+    "chat": {
+      "messages": "/api/cases/:caseId/chat",
+      "send": "/api/cases/:caseId/chat/send",
+      "history": "/api/cases/:caseId/chat/history",
+      "clear": "/api/cases/:caseId/chat/clear"
+    },
+    
+    "reports": {
+      "generate": "/api/cases/:caseId/reports",
+      "download": "/api/reports/:id/download",
+      "list": "/api/cases/:caseId/reports",
+      "status": "/api/reports/:id/status"
+    },
+    
+    "users": {
+      "profile": "/api/users/profile",
+      "update": "/api/users/profile",
+      "preferences": "/api/users/preferences",
+      "activity": "/api/users/activity",
+      "notifications": "/api/users/notifications"
+    },
+    
+    "admin": {
+      "users": "/api/admin/users",
+      "cases": "/api/admin/cases",
+      "analytics": "/api/admin/analytics",
+      "system": "/api/admin/system",
+      "logs": "/api/admin/logs"
+    }
+  },
+  
+  "webhooks": {
+    "document-uploaded": "/webhook/document-uploaded",
+    "extraction-complete": "/webhook/extraction-complete", 
+    "analysis-complete": "/webhook/analysis-complete",
+    "storage-event": "/webhook/storage",
+    "firestore-event": "/webhook/firestore",
+    "payment-event": "/webhook/payment"
+  },
+  
+  "websockets": {
+    "chat": "/ws/chat/:caseId",
+    "notifications": "/ws/notifications/:userId",
+    "analysis-status": "/ws/analysis/:analysisId",
+    "system-status": "/ws/system"
+  },
+  
+  "externalServices": {
+    "firebase": {
+      "auth": "https://identitytoolkit.googleapis.com/v1",
+      "firestore": "https://firestore.googleapis.com/v1",
+      "storage": "https://storage.googleapis.com/storage/v1"
+    },
+    
+    "googleCloud": {
+      "documentAI": "https://documentai.googleapis.com/v1",
+      "vertexAI": "https://aiplatform.googleapis.com/v1",
+      "translation": "https://translation.googleapis.com/language/translate/v2",
+      "vision": "https://vision.googleapis.com/v1"
+    },
+    
+    "ai": {
+      "openai": "https://api.openai.com/v1",
+      "anthropic": "https://api.anthropic.com/v1",
+      "cohere": "https://api.cohere.ai/v1"
+    },
+    
+    "legal": {
+      "westlaw": "https://api.westlaw.com",
+      "lexisNexis": "https://api.lexisnexis.com",
+      "courtListener": "https://www.courtlistener.com/api/rest/v3"
+    }
+  },
+  
+  "monitoring": {
+    "healthChecks": {
+      "interval": 30,
+      "timeout": 5000,
+      "retries": 3
+    },
+    
+    "metrics": {
+      "prometheus": "/metrics",
+      "grafana": "https://monitoring.legalcaseai.com",
+      "alerting": "https://alerts.legalcaseai.com"
+    },
+    
+    "logging": {
+      "cloudLogging": "https://logging.googleapis.com/v2",
+      "logLevel": "info",
+      "retention": "30 days"
+    }
+  },
+  
+  "security": {
+    "rateLimit": {
+      "window": 900000,
+      "max": 100,
+      "skipSuccessfulRequests": false
+    },
+    
+    "cors": {
+      "origins": [
+        "https://app.legalcaseai.com",
+        "https://admin.legalcaseai.com",
+        "https://legalcaseai.com"
+      ],
+      "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      "credentials": true
+    },
+    
+    "headers": {
+      "contentSecurityPolicy": "default-src 'self'",
+      "xFrameOptions": "DENY",
+      "xContentTypeOptions": "nosniff",
+      "referrerPolicy": "strict-origin-when-cross-origin"
+    }
+  },
+  
+  "features": {
+    "enabled": {
+      "aiAnalysis": true,
+      "documentExtraction": true,
+      "realTimeChat": true,
+      "pdfGeneration": true,
+      "emailNotifications": true,
+      "advancedSearch": true,
+      "collaboration": true,
+      "mobileAPI": true
+    },
+    
+    "beta": {
+      "voiceTranscription": false,
+      "multilingualSupport": false,
+      "blockchainVerification": false,
+      "advancedAI": false
+    }
+  },
+  
+  "configuration": {
+    "timeouts": {
+      "api": 30000,
+      "upload": 300000,
+      "extraction": 900000,
+      "analysis": 1800000,
+      "report": 600000
+    },
+    
+    "limits": {
+      "fileSize": 52428800,
+      "documentsPerCase": 100,
+      "casesPerUser": 50,
+      "apiCallsPerHour": 1000
+    },
+    
+    "formats": {
+      "dateTime": "YYYY-MM-DD HH:mm:ss",
+      "date": "YYYY-MM-DD",
+      "currency": "USD",
+      "timezone": "UTC"
+    }
+  },
+  
+  "support": {
+    "documentation": "https://docs.legalcaseai.com",
+    "apiReference": "https://api-docs.legalcaseai.com",
+    "support": "https://support.legalcaseai.com",
+    "status": "https://status.legalcaseai.com",
+    "community": "https://community.legalcaseai.com"
+  }
+}

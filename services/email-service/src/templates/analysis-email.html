@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{subject}}</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f4f4f4;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c5282 0%, #3182ce 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 300;
+        }
+        
+        .header .subtitle {
+            margin-top: 10px;
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 30px 20px;
+        }
+        
+        .case-info {
+            background-color: #f8f9fa;
+            border-left: 4px solid #2c5282;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+        
+        .case-info h2 {
+            margin: 0 0 15px 0;
+            color: #2c5282;
+            font-size: 20px;
+        }
+        
+        .case-detail {
+            margin: 8px 0;
+        }
+        
+        .case-detail strong {
+            color: #2c5282;
+            display: inline-block;
+            min-width: 120px;
+        }
+        
+        .analysis-summary {
+            background-color: #e6fffa;
+            border: 1px solid #81e6d9;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        
+        .analysis-summary h3 {
+            margin: 0 0 15px 0;
+            color: #234e52;
+            font-size: 18px;
+        }
+        
+        .key-findings {
+            margin: 20px 0;
+        }
+        
+        .key-findings h3 {
+            color: #2c5282;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .finding-item {
+            background-color: #fff5f5;
+            border-left: 3px solid #e53e3e;
+            padding: 12px 15px;
+            margin: 10px 0;
+            border-radius: 0 4px 4px 0;
+        }
+        
+        .recommendations {
+            background-color: #f0fff4;
+            border: 1px solid #9ae6b4;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        
+        .recommendations h3 {
+            margin: 0 0 15px 0;
+            color: #22543d;
+            font-size: 18px;
+        }
+        
+        .recommendation-item {
+            margin: 12px 0;
+            padding: 10px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .recommendation-item:last-child {
+            border-bottom: none;
+        }
+        
+        .priority-high {
+            color: #e53e3e;
+            font-weight: bold;
+        }
+        
+        .priority-medium {
+            color: #d69e2e;
+            font-weight: bold;
+        }
+        
+        .priority-low {
+            color: #38a169;
+            font-weight: bold;
+        }
+        
+        .action-buttons {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            margin: 8px;
+            background-color: #2c5282;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: #2a4365;
+        }
+        
+        .btn-secondary {
+            background-color: #4a5568;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #2d3748;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 25px 0;
+        }
+        
+        .stat-card {
+            background-color: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c5282;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #718096;
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+        
+        .footer {
+            background-color: #2d3748;
+            color: #a0aec0;
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .footer a {
+            color: #63b3ed;
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .disclaimer {
+            background-color: #fffbf0;
+            border: 1px solid #f6e05e;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 25px 0;
+            font-size: 13px;
+            color: #744210;
+        }
+        
+        @media (max-width: 600px) {
+            .email-container {
+                margin: 0;
+                box-shadow: none;
+            }
+            
+            .header, .content, .footer {
+                padding-left: 15px;
+                padding-right: 15px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Legal Case AI</h1>
+            <div class="subtitle">Case Analysis Complete</div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="content">
+            <p>Hello {{recipientName}},</p>
+            
+            <p>Your case analysis has been completed successfully. Here's a comprehensive summary of the findings and recommendations.</p>
+            
+            <!-- Case Information -->
+            <div class="case-info">
+                <h2>{{caseTitle}}</h2>
+                <div class="case-detail">
+                    <strong>Case Type:</strong> {{caseType}}
+                </div>
+                <div class="case-detail">
+                    <strong>Analysis Date:</strong> {{analysisDate}}
+                </div>
+                <div class="case-detail">
+                    <strong>Documents Analyzed:</strong> {{documentCount}}
+                </div>
+                <div class="case-detail">
+                    <strong>Processing Time:</strong> {{processingTime}}
+                </div>
+            </div>
+            
+            <!-- Statistics -->
+            {{#if showStats}}
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">{{stats.documentCount}}</div>
+                    <div class="stat-label">Documents</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{stats.keyFindings}}</div>
+                    <div class="stat-label">Key Findings</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{stats.riskLevel}}</div>
+                    <div class="stat-label">Risk Level</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{stats.recommendations}}</div>
+                    <div class="stat-label">Recommendations</div>
+                </div>
+            </div>
+            {{/if}}
+            
+            <!-- Executive Summary -->
+            {{#if executiveSummary}}
+            <div class="analysis-summary">
+                <h3>Executive Summary</h3>
+                <p>{{executiveSummary}}</p>
+            </div>
+            {{/if}}
+            
+            <!-- Key Findings -->
+            {{#if keyFindings}}
+            <div class="key-findings">
+                <h3>Key Findings</h3>
+                {{#each keyFindings}}
+                <div class="finding-item">
+                    {{this}}
+                </div>
+                {{/each}}
+            </div>
+            {{/if}}
+            
+            <!-- Recommendations -->
+            {{#if recommendations}}
+            <div class="recommendations">
+                <h3>Strategic Recommendations</h3>
+                {{#each recommendations}}
+                <div class="recommendation-item">
+                    <strong>{{this.action}}</strong>
+                    {{#if this.priority}}
+                    <span class="priority-{{this.priority}}"> ({{this.priority}} priority)</span>
+                    {{/if}}
+                    {{#if this.timeline}}
+                    <br><small><strong>Timeline:</strong> {{this.timeline}}</small>
+                    {{/if}}
+                    {{#if this.rationale}}
+                    <br><small>{{this.rationale}}</small>
+                    {{/if}}
+                </div>
+                {{/each}}
+            </div>
+            {{/if}}
+            
+            <!-- Risk Assessment -->
+            {{#if riskAssessment}}
+            <div class="case-info">
+                <h2>Risk Assessment</h2>
+                <div class="case-detail">
+                    <strong>Overall Risk Level:</strong> 
+                    <span class="priority-{{riskAssessment.level}}">{{riskAssessment.level}}</span>
+                </div>
+                {{#if riskAssessment.factors}}
+                <div class="case-detail">
+                    <strong>Key Risk Factors:</strong>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        {{#each riskAssessment.factors}}
+                        <li>{{this}}</li>
+                        {{/each}}
+                    </ul>
+                </div>
+                {{/if}}
+            </div>
+            {{/if}}
+            
+            <!-- Legal Issues -->
+            {{#if legalIssues}}
+            <div class="key-findings">
+                <h3>Legal Issues Identified</h3>
+                {{#each legalIssues}}
+                <div class="finding-item">
+                    <strong>{{this.title}}</strong> ({{this.severity}} severity)
+                    {{#if this.description}}
+                    <br><small>{{this.description}}</small>
+                    {{/if}}
+                </div>
+                {{/each}}
+            </div>
+            {{/if}}
+            
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                {{#if viewCaseUrl}}
+                <a href="{{viewCaseUrl}}" class="btn">View Full Case</a>
+                {{/if}}
+                {{#if downloadReportUrl}}
+                <a href="{{downloadReportUrl}}" class="btn btn-secondary">Download Report</a>
+                {{/if}}
+                {{#if dashboardUrl}}
+                <a href="{{dashboardUrl}}" class="btn btn-secondary">Go to Dashboard</a>
+                {{/if}}
+            </div>
+            
+            <!-- Next Steps -->
+            {{#if nextSteps}}
+            <div class="analysis-summary">
+                <h3>Recommended Next Steps</h3>
+                <ol style="margin: 0; padding-left: 20px;">
+                    {{#each nextSteps}}
+                    <li style="margin: 8px 0;">{{this}}</li>
+                    {{/each}}
+                </ol>
+            </div>
+            {{/if}}
+            
+            <!-- Additional Information -->
+            {{#if additionalInfo}}
+            <div style="margin: 25px 0; padding: 15px; background-color: #f8f9fa; border-radius: 6px;">
+                <h3 style="margin: 0 0 10px 0; color: #2c5282;">Additional Information</h3>
+                <p style="margin: 0;">{{additionalInfo}}</p>
+            </div>
+            {{/if}}
+            
+            <!-- Disclaimer -->
+            <div class="disclaimer">
+                <strong>Important:</strong> This analysis is generated by AI and is intended for informational purposes only. 
+                Please review all findings with qualified legal counsel before making any legal decisions. The accuracy of 
+                this analysis depends on the completeness and quality of the provided documents.
+            </div>
+            
+            <p>If you have any questions about this analysis or need assistance, please don't hesitate to contact our support team.</p>
+            
+            <p>Best regards,<br>
+            <strong>Legal Case AI Team</strong></p>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p>
+                <strong>Legal Case AI</strong><br>
+                Intelligent Legal Case Management<br>
+                <a href="{{unsubscribeUrl}}">Unsubscribe</a> | 
+                <a href="{{supportUrl}}">Support</a> | 
+                <a href="{{privacyUrl}}">Privacy Policy</a>
+            </p>
+            <p style="margin-top: 15px; font-size: 12px; opacity: 0.8;">
+                This email was sent to {{recipientEmail}} on {{timestamp}}<br>
+                © {{currentYear}} Legal Case AI for GCP Run Cloud Hackathon. All rights reserved.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

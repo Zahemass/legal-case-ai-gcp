@@ -1,0 +1,10 @@
+{
+  "id": "liability-principles-001",
+  "title": "Liability and Damages Principles", 
+  "content": "Types of Liability:\n\n1. Contractual Liability:\n- Breach of contract\n- Failure to perform obligations\n- Warranties and representations\n- Express vs. implied warranties\n\n2. Tort Liability:\n- Negligence (duty, breach, causation, damages)\n- Intentional torts (battery, defamation, fraud)\n- Strict liability (product liability, hazardous activities)\n\n3. Statutory Liability:\n- Regulatory violations\n- Compliance failures\n- Criminal liability\n\nDamage Types:\n- Compensatory damages (direct losses)\n- Consequential damages (indirect losses)\n- Punitive damages (punishment/deterrence)\n- Liquidated damages (pre-agreed amounts)\n- Nominal damages (technical breach)\n\nLimitation Strategies:\n- Liability caps (dollar limits)\n- Exclusion clauses (specific exclusions)\n- Indemnification provisions (risk transfer)\n- Insurance requirements\n- Force majeure clauses\n\nFactors Affecting Liability:\n- Foreseeability of damages\n- Proximate cause\n- Contributory/comparative negligence\n- Assumption of risk\n- Statutory limitations",
+  "category": "liability_law",
+  "datastore": "legal-knowledge-primary",
+  "tags": ["liability", "damages", "tort", "contract", "risk"],
+  "created_date": "2025-01-01",
+  "author": "Legal Knowledge Base"
+}

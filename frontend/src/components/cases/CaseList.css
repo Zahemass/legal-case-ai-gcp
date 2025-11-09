@@ -1,0 +1,107 @@
+.case-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 2rem;
+  padding: 1rem 0;
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 4rem 2rem;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 2px dashed var(--border-color);
+  margin: 2rem 0;
+}
+
+.empty-state::before {
+  content: '📁';
+  font-size: 4rem;
+  display: block;
+  margin-bottom: 1.5rem;
+  opacity: 0.5;
+}
+
+.empty-state h3 {
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+.empty-state p {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Animation for case cards */
+.case-list .case-card {
+  animation: slideInUp 0.6s ease-out;
+  animation-fill-mode: both;
+}
+
+.case-list .case-card:nth-child(1) { animation-delay: 0.1s; }
+.case-list .case-card:nth-child(2) { animation-delay: 0.2s; }
+.case-list .case-card:nth-child(3) { animation-delay: 0.3s; }
+.case-list .case-card:nth-child(4) { animation-delay: 0.4s; }
+.case-list .case-card:nth-child(5) { animation-delay: 0.5s; }
+.case-list .case-card:nth-child(6) { animation-delay: 0.6s; }
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .case-list {
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .case-list {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .empty-state {
+    padding: 3rem 1.5rem;
+    margin: 1.5rem 0;
+  }
+  
+  .empty-state h3 {
+    font-size: 1.25rem;
+  }
+  
+  .empty-state p {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .case-list {
+    padding: 0.5rem 0;
+  }
+  
+  .empty-state {
+    border-radius: 16px;
+    padding: 2.5rem 1rem;
+  }
+  
+  .empty-state::before {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+}

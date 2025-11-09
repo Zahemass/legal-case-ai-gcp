@@ -1,0 +1,336 @@
+# Vertex AI Agent Configuration for Legal Case AI
+apiVersion: v1
+kind: AgentConfig
+metadata:
+  name: legal-case-ai-agent
+  version: "1.0.0"
+  created: "2025-11-01T08:56:57Z"
+  createdBy: "Zahemassg"
+
+# Agent Basic Configuration
+agent:
+  displayName: "Legal Case AI Assistant"
+  description: "Advanced AI agent for legal case management, document analysis, and legal research"
+  language: "en-US"
+  timeZone: "UTC"
+  
+  # Agent Personality and Behavior
+  personality:
+    role: "Senior Legal AI Assistant"
+    tone: "Professional, analytical, and helpful"
+    expertise: 
+      - "Legal document analysis"
+      - "Case law research"
+      - "Contract review"
+      - "Legal writing assistance"
+      - "Regulatory compliance"
+      - "Risk assessment"
+    
+  # System Instructions
+  systemInstruction: |
+    You are a highly sophisticated Legal AI Assistant specialized in legal case management and analysis.
+    
+    Your primary capabilities include:
+    1. Analyzing legal documents for key insights and risks
+    2. Providing comprehensive case summaries and recommendations
+    3. Assisting with legal research and precedent analysis
+    4. Drafting legal documents and correspondence
+    5. Identifying legal issues and compliance requirements
+    6. Conducting risk assessments and strategic analysis
+    
+    Guidelines:
+    - Always maintain professional legal terminology and accuracy
+    - Provide detailed, well-reasoned analysis with supporting evidence
+    - Clearly distinguish between factual analysis and legal opinions
+    - Include disclaimers when appropriate about the need for qualified legal counsel
+    - Cite relevant laws, regulations, and case precedents when applicable
+    - Structure responses logically with clear headings and bullet points
+    - Consider multiple perspectives and potential counterarguments
+    - Highlight critical deadlines, statute of limitations, and procedural requirements
+    
+    Remember: You provide legal analysis and information, but always recommend consultation 
+    with qualified legal professionals for specific legal advice and decisions.
+
+# Model Configuration
+model:
+  name: "gemini-1.5-pro-001"
+  temperature: 0.2  # Lower temperature for more consistent legal analysis
+  topP: 0.8
+  topK: 40
+  maxOutputTokens: 8192
+  
+  # Safety Settings for Legal Content
+  safetySettings:
+    - category: "HARM_CATEGORY_HATE_SPEECH"
+      threshold: "BLOCK_MEDIUM_AND_ABOVE"
+    - category: "HARM_CATEGORY_DANGEROUS_CONTENT"
+      threshold: "BLOCK_MEDIUM_AND_ABOVE"
+    - category: "HARM_CATEGORY_HARASSMENT"
+      threshold: "BLOCK_MEDIUM_AND_ABOVE"
+    - category: "HARM_CATEGORY_SEXUALLY_EXPLICIT"
+      threshold: "BLOCK_MEDIUM_AND_ABOVE"
+
+# Tools Configuration
+tools:
+  # Document Search and Analysis
+  - name: "document_search"
+    displayName: "Legal Document Search"
+    description: "Search through case documents and legal databases"
+    type: "function"
+    enabled: true
+    
+  - name: "case_law_search"
+    displayName: "Case Law Research"
+    description: "Search legal precedents and case law databases"
+    type: "function"
+    enabled: true
+    
+  - name: "document_analyzer"
+    displayName: "Document Analysis Tool"
+    description: "Analyze legal documents for key insights, risks, and recommendations"
+    type: "function"
+    enabled: true
+    
+  - name: "contract_reviewer"
+    displayName: "Contract Review Tool"
+    description: "Comprehensive contract analysis and risk assessment"
+    type: "function"
+    enabled: true
+    
+  - name: "legal_writer"
+    displayName: "Legal Document Drafting"
+    description: "Assist with drafting legal documents and correspondence"
+    type: "function"
+    enabled: true
+    
+  - name: "compliance_checker"
+    displayName: "Compliance Analysis"
+    description: "Check regulatory compliance and identify requirements"
+    type: "function"
+    enabled: true
+    
+  - name: "deadline_tracker"
+    displayName: "Legal Deadline Tracker"
+    description: "Track important legal deadlines and statute of limitations"
+    type: "function"
+    enabled: true
+
+# Knowledge Base Configuration
+knowledgeBase:
+  - name: "legal_knowledge_primary"
+    displayName: "Primary Legal Knowledge Base"
+    description: "Main repository of legal documents, cases, and precedents"
+    type: "vector_search"
+    enabled: true
+    datastore: "projects/{PROJECT_ID}/locations/global/collections/legal-kb/dataStores/legal-knowledge-primary"
+    
+  - name: "case_documents"
+    displayName: "Case Document Repository"
+    description: "Client case documents and analysis results"
+    type: "vector_search"
+    enabled: true
+    datastore: "projects/{PROJECT_ID}/locations/global/collections/legal-kb/dataStores/case-documents"
+    
+  - name: "legal_templates"
+    displayName: "Legal Document Templates"
+    description: "Standard legal document templates and forms"
+    type: "structured_data"
+    enabled: true
+    datastore: "projects/{PROJECT_ID}/locations/global/collections/legal-kb/dataStores/legal-templates"
+
+# Conversation Flow Configuration
+conversationFlow:
+  # Welcome Flow
+  welcome:
+    enabled: true
+    message: |
+      Welcome to Legal Case AI! I'm your specialized legal assistant, ready to help you with:
+      
+      📋 **Document Analysis** - Comprehensive legal document review and insights
+      🔍 **Case Research** - Legal precedent and case law research  
+      📝 **Document Drafting** - Legal writing and document preparation assistance
+      ⚖️ **Compliance Review** - Regulatory compliance analysis
+      📊 **Risk Assessment** - Legal risk evaluation and recommendations
+      
+      How may I assist you with your legal matter today?
+    
+    suggestedActions:
+      - "Analyze a legal document"
+      - "Research case law"
+      - "Draft a legal document"
+      - "Review contract terms"
+      - "Assess legal risks"
+
+  # Error Handling
+  errorHandling:
+    noMatch:
+      message: "I didn't quite understand that request. Could you please rephrase it or try one of these options?"
+      fallbackToHuman: false
+      
+    systemError:
+      message: "I'm experiencing a technical issue. Please try again in a moment or contact support if the problem persists."
+      
+    timeout:
+      message: "I need a bit more time to process this complex legal analysis. Please wait a moment..."
+
+# Integration Settings
+integrations:
+  firestore:
+    enabled: true
+    project: "{PROJECT_ID}"
+    collections:
+      - "cases"
+      - "documents" 
+      - "document_analysis"
+      - "case_analysis"
+      - "chat_messages"
+      
+  storage:
+    enabled: true
+    bucket: "{STORAGE_BUCKET}"
+    
+  # External Legal Databases (placeholder for future integration)
+  externalSources:
+    - name: "westlaw"
+      enabled: false
+      type: "legal_database"
+    - name: "lexis_nexis"
+      enabled: false
+      type: "legal_database"
+    - name: "google_scholar"
+      enabled: true
+      type: "academic_search"
+
+# Security and Access Control
+security:
+  authentication:
+    required: true
+    methods: ["google_auth", "firebase_auth"]
+    
+  authorization:
+    roles:
+      - name: "legal_professional"
+        permissions: ["full_access"]
+      - name: "paralegal"
+        permissions: ["read_access", "basic_analysis"]
+      - name: "client"
+        permissions: ["read_own_cases"]
+        
+  dataAccess:
+    encryption: true
+    auditLogging: true
+    dataResidency: "us-central1"
+
+# Performance and Scaling
+performance:
+  maxConcurrentSessions: 100
+  sessionTimeout: 3600  # 1 hour
+  responseTimeout: 60    # 60 seconds
+  
+  caching:
+    enabled: true
+    ttl: 1800  # 30 minutes
+    
+  rateLimit:
+    requestsPerMinute: 60
+    requestsPerHour: 1000
+
+# Monitoring and Analytics
+monitoring:
+  metrics:
+    enabled: true
+    customMetrics:
+      - "legal_document_analyzed"
+      - "case_law_searched"
+      - "contract_reviewed"
+      - "legal_document_drafted"
+      
+  logging:
+    level: "INFO"
+    includeRequestBody: false  # For privacy
+    includeUserData: false     # For privacy
+    
+  alerts:
+    - name: "high_error_rate"
+      condition: "error_rate > 5%"
+      notification: "email"
+    - name: "response_time_high"
+      condition: "avg_response_time > 10s"
+      notification: "email"
+
+# Deployment Configuration
+deployment:
+  environment: "production"
+  region: "us-central1"
+  
+  resources:
+    cpu: "2"
+    memory: "4Gi"
+    
+  autoscaling:
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilization: 70
+    
+  # Blue-green deployment settings
+  deploymentStrategy:
+    type: "rolling"
+    maxSurge: 1
+    maxUnavailable: 0
+
+# Feature Flags
+features:
+  advancedLegalAnalysis: true
+  contractRiskScoring: true
+  precedentMatching: true
+  legalWritingAssistance: true
+  complianceChecking: true
+  multilanguageSupport: false  # Future feature
+  voiceInterface: false        # Future feature
+  
+# Testing Configuration
+testing:
+  enabled: true
+  testSuites:
+    - name: "document_analysis_tests"
+      scenarios:
+        - "contract_analysis"
+        - "legal_brief_review"
+        - "compliance_document_check"
+    - name: "conversation_flow_tests" 
+      scenarios:
+        - "welcome_flow"
+        - "error_handling"
+        - "complex_legal_queries"
+        
+# Compliance and Legal
+compliance:
+  dataPrivacy:
+    gdpr: true
+    ccpa: true
+    hipaa: false  # Not handling health data
+    
+  retention:
+    conversationLogs: "7 years"  # Legal requirement
+    userSessions: "30 days"
+    analyticsData: "2 years"
+    
+  auditTrail:
+    enabled: true
+    includeUserActions: true
+    includeSystemEvents: true
+    retentionPeriod: "10 years"
+
+# Custom Extensions
+extensions:
+  - name: "legal_citation_formatter"
+    type: "output_processor"
+    enabled: true
+    
+  - name: "precedent_finder"
+    type: "knowledge_enhancer"
+    enabled: true
+    
+  - name: "risk_scorer"
+    type: "analysis_enhancer"
+    enabled: true

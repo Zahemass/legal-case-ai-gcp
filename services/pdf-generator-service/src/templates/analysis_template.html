@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ case_title }} - {{ report_type }} Report</title>
+    <style>
+        @page {
+            margin: 1in;
+            @top-right {
+                content: "Page " counter(page) " of " counter(pages);
+                font-family: Arial, sans-serif;
+                font-size: 10pt;
+                color: #666;
+            }
+            @top-left {
+                content: "{{ case_title }}";
+                font-family: Arial, sans-serif;
+                font-size: 10pt;
+                color: #666;
+            }
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #2c5282;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c5282;
+            margin-bottom: 10px;
+        }
+
+        .report-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2c5282;
+            margin: 20px 0;
+        }
+
+        .case-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+
+        .case-info h3 {
+            margin-top: 0;
+            color: #2c5282;
+        }
+
+        .section {
+            margin: 30px 0;
+            page-break-inside: avoid;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2c5282;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .subsection-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #4a5568;
+            margin: 20px 0 10px 0;
+        }
+
+        .key-findings {
+            background-color: #fff5f5;
+            border-left: 4px solid #e53e3e;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .recommendations {
+            background-color: #f0fff4;
+            border-left: 4px solid #38a169;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .risk-assessment {
+            background-color: #fffbeb;
+            border-left: 4px solid #d69e2e;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .table th,
+        .table td {
+            border: 1px solid #e2e8f0;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .table th {
+            background-color: #2c5282;
+            color: white;
+            font-weight: bold;
+        }
+
+        .table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .list-item {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+
+        .list-item:before {
+            content: "•";
+            color: #2c5282;
+            font-weight: bold;
+            display: inline-block;
+            width: 1em;
+            margin-left: -1em;
+        }
+
+        .priority-high {
+            color: #e53e3e;
+            font-weight: bold;
+        }
+
+        .priority-medium {
+            color: #d69e2e;
+            font-weight: bold;
+        }
+
+        .priority-low {
+            color: #38a169;
+            font-weight: bold;
+        }
+
+        .status-completed {
+            color: #38a169;
+            font-weight: bold;
+        }
+
+        .status-pending {
+            color: #d69e2e;
+            font-weight: bold;
+        }
+
+        .status-error {
+            color: #e53e3e;
+            font-weight: bold;
+        }
+
+        .page-break {
+            page-break-before: always;
+        }
+
+        .confidential {
+            background-color: #fed7e2;
+            border: 2px solid #e53e3e;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+            font-weight: bold;
+            color: #742a2a;
+        }
+
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: #2c5282;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            font-size: 10pt;
+        }
+
+        .chart-placeholder {
+            background-color: #f8f9fa;
+            border: 1px dashed #cbd5e0;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+            font-style: italic;
+            color: #718096;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="logo">Legal Case AI</div>
+        <div class="report-title">{{ report_title }}</div>
+        <div>Generated on {{ generation_date }}</div>
+    </div>
+
+    <!-- Confidentiality Notice -->
+    <div class="confidential">
+        CONFIDENTIAL LEGAL DOCUMENT<br>
+        This report contains privileged and confidential information.
+        Distribution restricted to authorized parties only.
+    </div>
+
+    <!-- Case Information -->
+    <div class="case-info">
+        <h3>Case Information</h3>
+        <table class="table">
+            <tr>
+                <td><strong>Case Title:</strong></td>
+                <td>{{ case_title }}</td>
+            </tr>
+            <tr>
+                <td><strong>Case Type:</strong></td>
+                <td>{{ case_type }}</td>
+            </tr>
+            <tr>
+                <td><strong>Status:</strong></td>
+                <td class="status-{{ case_status|lower }}">{{ case_status }}</td>
+            </tr>
+            <tr>
+                <td><strong>Priority:</strong></td>
+                <td class="priority-{{ case_priority|lower }}">{{ case_priority }}</td>
+            </tr>
+            <tr>
+                <td><strong>Created:</strong></td>
+                <td>{{ case_created_at }}</td>
+            </tr>
+            <tr>
+                <td><strong>Last Updated:</strong></td>
+                <td>{{ case_updated_at }}</td>
+            </tr>
+            <tr>
+                <td><strong>Documents:</strong></td>
+                <td>{{ document_count }} documents</td>
+            </tr>
+        </table>
+    </div>
+
+    {% if report_type == 'case_analysis' %}
+    <!-- Executive Summary -->
+    <div class="section">
+        <div class="section-title">Executive Summary</div>
+        {% if executive_summary %}
+            <p>{{ executive_summary }}</p>
+        {% else %}
+            <p><em>Executive summary will be available after comprehensive case analysis is completed.</em></p>
+        {% endif %}
+    </div>
+
+    <!-- Key Findings -->
+    {% if key_findings %}
+    <div class="section">
+        <div class="section-title">Key Findings</div>
+        <div class="key-findings">
+            {% for finding in key_findings %}
+                <div class="list-item">{{ finding }}</div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Legal Issues -->
+    {% if legal_issues %}
+    <div class="section">
+        <div class="section-title">Legal Issues Identified</div>
+        {% for issue in legal_issues %}
+            <div class="subsection-title">{{ issue.title }} ({{ issue.severity }} Priority)</div>
+            <p>{{ issue.description }}</p>
+            {% if issue.implications %}
+                <p><strong>Implications:</strong> {{ issue.implications }}</p>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Risk Assessment -->
+    {% if risk_assessment %}
+    <div class="section">
+        <div class="section-title">Risk Assessment</div>
+        <div class="risk-assessment">
+            <div class="subsection-title">Overall Risk Level: 
+                <span class="priority-{{ risk_assessment.overall_risk_level|lower }}">
+                    {{ risk_assessment.overall_risk_level }}
+                </span>
+            </div>
+            
+            {% if risk_assessment.key_risk_factors %}
+                <div class="subsection-title">Key Risk Factors</div>
+                {% for risk in risk_assessment.key_risk_factors %}
+                    <div class="list-item">{{ risk }}</div>
+                {% endfor %}
+            {% endif %}
+
+            {% if risk_assessment.mitigation_strategies %}
+                <div class="subsection-title">Mitigation Strategies</div>
+                {% for strategy in risk_assessment.mitigation_strategies %}
+                    <div class="list-item">{{ strategy }}</div>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recommendations -->
+    {% if recommendations %}
+    <div class="section">
+        <div class="section-title">Recommendations</div>
+        <div class="recommendations">
+            {% for rec in recommendations %}
+                <div class="subsection-title">
+                    {{ loop.index }}. {{ rec.action }}
+                    <span class="priority-{{ rec.priority|lower }}">({{ rec.priority }} Priority)</span>
+                </div>
+                {% if rec.timeline %}
+                    <p><strong>Timeline:</strong> {{ rec.timeline }}</p>
+                {% endif %}
+                {% if rec.rationale %}
+                    <p><strong>Rationale:</strong> {{ rec.rationale }}</p>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Timeline -->
+    {% if timeline %}
+    <div class="section page-break">
+        <div class="section-title">Case Timeline</div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Event</th>
+                    <th>Significance</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for event in timeline %}
+                <tr>
+                    <td>{{ event.date }}</td>
+                    <td>{{ event.event }}</td>
+                    <td>{{ event.significance }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% elif report_type == 'document_summary' %}
+    <!-- Document Overview -->
+    <div class="section">
+        <div class="section-title">Document Overview</div>
+        
+        <div class="chart-placeholder">
+            Document Statistics Chart
+            <br>Total: {{ document_count }} documents
+        </div>
+
+        {% if document_statistics %}
+        <table class="table">
+            <tr>
+                <td><strong>Total Documents:</strong></td>
+                <td>{{ document_statistics.total_documents }}</td>
+            </tr>
+            <tr>
+                <td><strong>Total Size:</strong></td>
+                <td>{{ document_statistics.total_size_mb }} MB</td>
+            </tr>
+            <tr>
+                <td><strong>Average Size:</strong></td>
+                <td>{{ document_statistics.avg_size_mb }} MB</td>
+            </tr>
+            <tr>
+                <td><strong>Extraction Completed:</strong></td>
+                <td>{{ document_statistics.extraction_completed }}</td>
+            </tr>
+        </table>
+        {% endif %}
+    </div>
+
+    <!-- Document Inventory -->
+    {% if documents %}
+    <div class="section">
+        <div class="section-title">Document Inventory</div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Document Name</th>
+                    <th>Type</th>
+                    <th>Size</th>
+                    <th>Upload Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doc in documents %}
+                <tr>
+                    <td>{{ doc.filename }}</td>
+                    <td>{{ doc.content_type }}</td>
+                    <td>{{ doc.size_mb }} MB</td>
+                    <td>{{ doc.uploaded_at }}</td>
+                    <td class="status-{{ doc.extraction_status|lower }}">{{ doc.extraction_status }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% elif report_type == 'timeline_report' %}
+    <!-- Timeline Analysis -->
+    <div class="section">
+        <div class="section-title">Timeline Analysis</div>
+        {% if timeline %}
+            <p>This timeline contains {{ timeline|length }} key events identified from case documents and analysis.</p>
+            
+            <div class="chart-placeholder">
+                Timeline Visualization
+                <br>{{ timeline|length }} events over time
+            </div>
+
+            {% for event in timeline %}
+                <div class="subsection-title">{{ event.date }} - {{ event.event }}</div>
+                <p><strong>Significance:</strong> {{ event.significance }}</p>
+                {% if not loop.last %}<hr style="margin: 20px 0; border: none; border-top: 1px solid #e2e8f0;">{% endif %}
+            {% endfor %}
+        {% else %}
+            <p><em>Timeline data is not yet available. Please run case analysis to generate timeline information.</em></p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Document Analysis Summary -->
+    {% if document_analyses %}
+    <div class="section page-break">
+        <div class="section-title">Document Analysis Summary</div>
+        {% for analysis in document_analyses %}
+            <div class="subsection-title">{{ analysis.filename }}</div>
+            <p>{{ analysis.summary }}</p>
+            {% if analysis.key_points %}
+                <div class="subsection-title">Key Points:</div>
+                {% for point in analysis.key_points %}
+                    <div class="list-item">{{ point }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Appendices -->
+    <div class="section page-break">
+        <div class="section-title">Appendices</div>
+        
+        <div class="subsection-title">Appendix A: Analysis Metadata</div>
+        <table class="table">
+            <tr>
+                <td><strong>Report Type:</strong></td>
+                <td>{{ report_type }}</td>
+            </tr>
+            <tr>
+                <td><strong>Generation Date:</strong></td>
+                <td>{{ generation_date }}</td>
+            </tr>
+            <tr>
+                <td><strong>Analysis Confidence:</strong></td>
+                <td>{{ analysis_confidence }}%</td>
+            </tr>
+            <tr>
+                <td><strong>Processing Time:</strong></td>
+                <td>{{ processing_time }} seconds</td>
+            </tr>
+        </table>
+
+        <div class="subsection-title">Appendix B: Disclaimer</div>
+        <p style="font-size: 12px; color: #666;">
+            This report is generated by an AI-powered legal analysis system and is intended for informational purposes only. 
+            The analysis is based on available documents and data at the time of generation. This report should not be 
+            considered as formal legal advice and should be reviewed by qualified legal counsel. The accuracy and 
+            completeness of the analysis depends on the quality and completeness of the input documents.
+        </p>
+    </div>
+</body>
+</html>

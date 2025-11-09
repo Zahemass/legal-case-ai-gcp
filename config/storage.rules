@@ -1,0 +1,200 @@
+rules_version = '2';
+
+// Legal Case AI - Cloud Storage Security Rules
+// Created: 2025-11-01 10:10:34 UTC
+// Author: Zahemassg
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper function to check authentication
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && 
+             request.auth.token.role == 'admin';
+    }
+    
+    // Helper function to check file size (50MB limit)
+    function isValidSize() {
+      return resource.size < 50 * 1024 * 1024;
+    }
+    
+    // Helper function to check allowed file types for documents
+    function isAllowedDocumentType() {
+      return request.resource.contentType.matches('application/pdf') ||
+             request.resource.contentType.matches('application/msword') ||
+             request.resource.contentType.matches('application/vnd.openxmlformats-officedocument.wordprocessingml.document') ||
+             request.resource.contentType.matches('text/plain') ||
+             request.resource.contentType.matches('application/rtf') ||
+             request.resource.contentType.matches('image/.*');
+    }
+    
+    // Helper function to check if user owns the case
+    function ownsCaseFromPath(casePath) {
+      // Extract case ID from path like "cases/{caseId}/documents/{docId}"
+      let caseId = casePath.split('/')[1];
+      return firestore.get(/databases/(default)/documents/cases/$(caseId)).data.createdBy == request.auth.uid;
+    }
+    
+    // Documents bucket - case-specific access
+    match /cases/{caseId}/documents/{documentId} {
+      // Users can upload documents to their own cases
+      allow write: if isAuthenticated() && 
+                     isAllowedDocumentType() && 
+                     isValidSize() &&
+                     firestore.exists(/databases/(default)/documents/cases/$(caseId)) &&
+                     firestore.get(/databases/(default)/documents/cases/$(caseId)).data.createdBy == request.auth.uid;
+      
+      // Users can read documents from their own cases
+      allow read: if isAuthenticated() && 
+                    firestore.exists(/databases/(default)/documents/cases/$(caseId)) &&
+                    (firestore.get(/databases/(default)/documents/cases/$(caseId)).data.createdBy == request.auth.uid ||
+                     isAdmin());
+      
+      // Allow deletion by case owner or admin
+      allow delete: if isAuthenticated() && 
+                      firestore.exists(/databases/(default)/documents/cases/$(caseId)) &&
+                      (firestore.get(/databases/(default)/documents/cases/$(caseId)).data.createdBy == request.auth.uid ||
+                       isAdmin());
+    }
+    
+    // User profile images
+    match /users/{userId}/profile/{imageId} {
+      allow read, write: if isAuthenticated() && 
+                           (request.auth.uid == userId || isAdmin());
+      
+      // Only allow image uploads for profile pictures
+      allow write: if isAuthenticated() && 
+                     request.auth.uid == userId &&
+                     request.resource.contentType.matches('image/.*') &&
+                     request.resource.size < 5 * 1024 * 1024; // 5MB limit for images
+    }
+    
+    // Temporary uploads - user-specific temporary storage
+    match /temp/{userId}/{fileName} {
+      // Users can upload temporary files
+      allow write: if isAuthenticated() && 
+                     request.auth.uid == userId &&
+                     isAllowedDocumentType() &&
+                     isValidSize();
+      
+      // Users can read their own temporary files
+      allow read: if isAuthenticated() && 
+                    request.auth.uid == userId;
+      
+      // Auto-delete after 24 hours (handled by lifecycle rules)
+      allow delete: if isAuthenticated() && 
+                      request.auth.uid == userId;
+    }
+    
+    // Reports bucket - generated PDF reports
+    match /reports/{caseId}/{reportId} {
+      // Users can read reports for their cases
+      allow read: if isAuthenticated() && 
+                    firestore.exists(/databases/(default)/documents/cases/$(caseId)) &&
+                    (firestore.get(/databases/(default)/documents/cases/$(caseId)).data.createdBy == request.auth.uid ||
+                     isAdmin());
+      
+      // Only services can write reports (no user write access)
+      allow write: if false;
+      
+      // Users can delete reports for their cases
+      allow delete: if isAuthenticated() && 
+                      firestore.exists(/databases/(default)/documents/cases/$(caseId)) &&
+                      (firestore.get(/databases/(default)/documents/cases/$(caseId)).data.createdBy == request.auth.uid ||
+                       isAdmin());
+    }
+    
+    // Extracted content - processed document data
+    match /extracted/{caseId}/{documentId} {
+      // Read access for case owners
+      allow read: if isAuthenticated() && 
+                    firestore.exists(/databases/(default)/documents/cases/$(caseId)) &&
+                    (firestore.get(/databases/(default)/documents/cases/$(caseId)).data.createdBy == request.auth.uid ||
+                     isAdmin());
+      
+      // No user write access - only services
+      allow write: if false;
+    }
+    
+    // Backups - admin only access
+    match /backups/{backupPath=**} {
+      allow read, write: if isAdmin();
+    }
+    
+    // System files - admin only
+    match /system/{systemFile} {
+      allow read, write: if isAdmin();
+    }
+    
+    // Templates - read for authenticated users, write for admin
+    match /templates/{templateType}/{templateId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // Knowledge base attachments
+    match /knowledge/{entryId}/{attachmentId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // Shared files - temporary sharing
+    match /shared/{shareToken}/{fileName} {
+      // Allow read with valid share token (token validation done in app)
+      allow read: if isAuthenticated();
+      
+      // No write access to shared files
+      allow write: if false;
+    }
+    
+    // Processed files - intermediate processing results
+    match /processing/{jobId}/{fileName} {
+      // No direct user access - service accounts only
+      allow read, write: if false;
+    }
+    
+    // Cache files - temporary cached content
+    match /cache/{cacheKey} {
+      // Read only for authenticated users
+      allow read: if isAuthenticated();
+      
+      // No user write access
+      allow write: if false;
+    }
+    
+    // Analytics and logs - admin only
+    match /analytics/{analyticsFile} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+    
+    // Compliance and audit files
+    match /compliance/{complianceFile} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+    
+    // Integration exports
+    match /exports/{userId}/{exportId} {
+      allow read: if isAuthenticated() && 
+                    request.auth.uid == userId;
+      
+      allow write: if isAuthenticated() && 
+                     request.auth.uid == userId;
+      
+      // Auto-cleanup after download
+      allow delete: if isAuthenticated() && 
+                      request.auth.uid == userId;
+    }
+    
+    // Default deny - explicitly deny access to any other paths
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
