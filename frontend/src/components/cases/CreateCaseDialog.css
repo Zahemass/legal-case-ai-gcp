@@ -4,14 +4,14 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(15, 23, 42, 0.7);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1050;
   padding: 2rem;
-  backdrop-filter: blur(4px);
-  animation: fadeIn 0.3s ease-out;
+  backdrop-filter: blur(8px);
+  animation: fadeIn 0.2s ease-out;
 }
 
 @keyframes fadeIn {
@@ -25,20 +25,23 @@
 
 .dialog {
   background: white;
-  border-radius: 20px;
+  border-radius: 24px;
   width: 100%;
-  max-width: 500px;
+  max-width: 650px;
   max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
-  animation: slideInScale 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
+  overflow: hidden;
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
+  animation: slideInScale 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
 }
 
 @keyframes slideInScale {
   from {
     opacity: 0;
-    transform: translateY(30px) scale(0.9);
+    transform: translateY(40px) scale(0.95);
   }
   to {
     opacity: 1;
@@ -47,153 +50,234 @@
 }
 
 .dialog-header {
-  padding: 2rem 2rem 1rem;
-  border-bottom: 2px solid var(--light-bg);
+  padding: 2rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 1px solid #e2e8f0;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 1rem;
   position: relative;
 }
 
-.dialog-header::before {
+.dialog-header::after {
   content: '';
   position: absolute;
   bottom: 0;
   left: 2rem;
   right: 2rem;
-  height: 2px;
-  background: linear-gradient(90deg, var(--primary-color), var(--primary-dark));
-  border-radius: 1px;
+  height: 3px;
+  background: linear-gradient(90deg, #2563eb 0%, #7c3aed 100%);
+  border-radius: 3px;
+}
+
+.dialog-header-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 8px 16px rgba(37, 99, 235, 0.25);
+}
+
+.dialog-header-icon svg {
+  width: 24px;
+  height: 24px;
+  color: white;
 }
 
 .dialog-header h2 {
-  color: var(--text-primary);
+  color: #0f172a;
   font-size: 1.5rem;
   font-weight: 700;
   margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.dialog-header h2::before {
-  content: '📋';
-  font-size: 1.25rem;
+  flex: 1;
 }
 
 .close-btn {
-  background: var(--light-bg);
-  border: 2px solid var(--border-color);
-  color: var(--text-secondary);
+  background: white;
+  border: 2px solid #e2e8f0;
+  color: #64748b;
   width: 40px;
   height: 40px;
-  border-radius: 50%;
+  border-radius: 10px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
-  font-weight: 700;
   transition: all 0.2s ease;
-  line-height: 1;
+  flex-shrink: 0;
+}
+
+.close-btn svg {
+  width: 20px;
+  height: 20px;
 }
 
 .close-btn:hover {
-  background: var(--danger-color);
-  border-color: var(--danger-color);
+  background: #ef4444;
+  border-color: #ef4444;
   color: white;
   transform: rotate(90deg);
 }
 
-.dialog form {
+.dialog-body {
   padding: 2rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.form-row:has(.form-group:nth-child(2)) {
+  grid-template-columns: 1fr 1fr;
 }
 
 .form-group {
-  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .form-group label {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
   font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 0.5rem;
-  font-size: 0.95rem;
+  color: #0f172a;
+  font-size: 0.9375rem;
+}
+
+.required {
+  color: #ef4444;
+  font-weight: 700;
 }
 
 .form-group input,
+.form-group select,
 .form-group textarea {
   width: 100%;
-  padding: 1rem;
-  border: 2px solid var(--border-color);
+  padding: 0.875rem 1rem;
+  border: 2px solid #e2e8f0;
   border-radius: 12px;
-  font-size: 0.95rem;
+  font-size: 0.9375rem;
   font-family: inherit;
   transition: all 0.2s ease;
-  background: var(--light-bg);
+  background: #f8fafc;
+  color: #0f172a;
 }
 
 .form-group input:focus,
+.form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: var(--primary-color);
+  border-color: #2563eb;
   background: white;
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: #94a3b8;
 }
 
 .form-group textarea {
   resize: vertical;
   min-height: 100px;
   font-family: inherit;
+  line-height: 1.6;
 }
 
-.dialog-actions {
+.form-group select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 20px;
+  padding-right: 2.5rem;
+}
+
+.dialog-footer {
   display: flex;
   gap: 1rem;
   justify-content: flex-end;
-  padding-top: 1.5rem;
-  border-top: 2px solid var(--light-bg);
+  padding: 1.5rem 2rem;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
 }
 
-.dialog-actions button {
+.dialog-footer button {
   padding: 0.875rem 2rem;
-  border-radius: 10px;
+  border-radius: 12px;
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.9375rem;
   cursor: pointer;
   transition: all 0.2s ease;
   border: 2px solid transparent;
-  min-width: 120px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 140px;
+  justify-content: center;
 }
 
-.dialog-actions button[type="button"] {
-  background: var(--light-bg);
-  color: var(--text-secondary);
-  border-color: var(--border-color);
+.dialog-footer button svg {
+  width: 18px;
+  height: 18px;
 }
 
-.dialog-actions button[type="button"]:hover {
-  background: var(--secondary-color);
+.btn-cancel {
+  background: white;
+  color: #64748b;
+  border-color: #e2e8f0;
+}
+
+.btn-cancel:hover {
+  background: #f1f5f9;
+  color: #475569;
+  border-color: #cbd5e1;
+}
+
+.btn-submit {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   color: white;
-  border-color: var(--secondary-color);
+  border-color: #2563eb;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
 }
 
-.dialog-actions button[type="submit"] {
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-  color: white;
-  border-color: var(--primary-color);
+.btn-submit:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
 }
 
-.dialog-actions button[type="submit"]:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--primary-dark) 0%, #1e40af 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
-}
-
-.dialog-actions button[type="submit"]:disabled {
+.btn-submit:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
+}
+
+.spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Responsive Design */
@@ -203,26 +287,37 @@
   }
   
   .dialog {
-    border-radius: 16px;
+    border-radius: 20px;
+    max-height: 95vh;
   }
   
   .dialog-header {
-    padding: 1.5rem 1.5rem 1rem;
+    padding: 1.5rem;
   }
   
   .dialog-header h2 {
     font-size: 1.25rem;
   }
   
-  .dialog form {
+  .dialog-header-icon {
+    width: 44px;
+    height: 44px;
+  }
+  
+  .dialog-body {
     padding: 1.5rem;
   }
   
-  .dialog-actions {
-    flex-direction: column;
+  .form-row:has(.form-group:nth-child(2)) {
+    grid-template-columns: 1fr;
   }
   
-  .dialog-actions button {
+  .dialog-footer {
+    padding: 1.25rem 1.5rem;
+    flex-direction: column-reverse;
+  }
+  
+  .dialog-footer button {
     width: 100%;
   }
 }
@@ -232,17 +327,29 @@
     padding: 0.5rem;
   }
   
-  .dialog-header {
-    padding: 1.25rem 1.25rem 0.75rem;
+  .dialog {
+    border-radius: 16px;
   }
   
-  .dialog form {
+  .dialog-header {
     padding: 1.25rem;
+  }
+  
+  .dialog-header::after {
+    left: 1.25rem;
+    right: 1.25rem;
+  }
+  
+  .dialog-body {
+    padding: 1.25rem;
+  }
+  
+  .dialog-footer {
+    padding: 1rem 1.25rem;
   }
   
   .close-btn {
     width: 36px;
     height: 36px;
-    font-size: 1.25rem;
   }
 }

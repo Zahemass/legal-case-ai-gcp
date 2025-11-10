@@ -7,6 +7,7 @@ import HomePage from './pages/HomePage';
 import CasesPage from './pages/CasesPage';
 import DocumentsPage from './pages/DocumentsPage';
 import AIAgentPage from './pages/AIAgentPage';
+import CaseAnalysisView from './components/analysis/CaseAnalysisView';
 import Navigation from './components/common/Navigation';
 import './App.css';
 
@@ -16,9 +17,12 @@ function App() {
       <Router>
         <div className="App">
           <Routes>
+            {/* 🔐 Login Page */}
             <Route path="/login" element={<Login />} />
-            <Route 
-              path="/" 
+
+            {/* 🏠 Home Page */}
+            <Route
+              path="/"
               element={
                 <ProtectedRoute>
                   <div className="d-flex">
@@ -28,10 +32,12 @@ function App() {
                     </div>
                   </div>
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/cases" 
+
+            {/* 📁 Cases Page */}
+            <Route
+              path="/cases"
               element={
                 <ProtectedRoute>
                   <div className="d-flex">
@@ -41,10 +47,12 @@ function App() {
                     </div>
                   </div>
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/documents" 
+
+            {/* 📄 Documents Page */}
+            <Route
+              path="/documents"
               element={
                 <ProtectedRoute>
                   <div className="d-flex">
@@ -54,10 +62,12 @@ function App() {
                     </div>
                   </div>
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/ai-agent/:caseId" 
+
+            {/* 🤖 AI Agent Page */}
+            <Route
+              path="/ai-agent/:caseId"
               element={
                 <ProtectedRoute>
                   <div className="d-flex">
@@ -67,9 +77,26 @@ function App() {
                     </div>
                   </div>
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route path="*" element={<Navigate to="/" />} />
+
+            {/* 🧠 AI Case Analysis Page */}
+            <Route
+              path="/analysis/:caseId"
+              element={
+                <ProtectedRoute>
+                  <div className="d-flex">
+                    <Navigation />
+                    <div className="main-content flex-grow-1">
+                      <CaseAnalysisView />
+                    </div>
+                  </div>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* 🚧 Fallback Route */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
       </Router>

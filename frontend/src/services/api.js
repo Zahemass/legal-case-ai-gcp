@@ -9,6 +9,8 @@ import { auth } from '../firebase';
 const CASE_API_URL = import.meta.env.VITE_CASE_API_URL || 'http://localhost:8080';
 const DOCUMENT_API_URL = import.meta.env.VITE_DOCUMENT_API_URL || 'http://localhost:8080';
 const ANALYSIS_API_URL = import.meta.env.VITE_ANALYSIS_API_URL || 'http://localhost:8080';
+const VITE_CASE_ANALYSIS_API_URL = import.meta.env.VITE_CASE_ANALYSIS_API_URL || 'http://localhost:8080';
+const AI_AGENT_API_URL = import.meta.env.VITE_AI_AGENT_API_URL || 'http://localhost:8080';
 
 
 async function getAuthToken() {
@@ -53,12 +55,57 @@ async function request(baseUrl, path, options = {}) {
  */
 export async function getCases() {
   try {
-    return await request(CASE_API_URL, '/cases', { method: 'GET' });
+    const response = await request(CASE_API_URL, '/cases', { method: 'GET' });
+
+    // 🔍 Handle both possible shapes: {data: {cases: [...]}} OR {cases: [...]}
+    const cases = Array.isArray(response?.data?.cases)
+      ? response.data.cases
+      : Array.isArray(response?.cases)
+      ? response.cases
+      : [];
+
+    console.log("🧾 Raw API cases:", cases);
+
+    const normalized = cases.map((c) => {
+  // Ensure documentCount is pulled even if backend nests data or uses a fallback
+  const documentCount =
+    typeof c.documentCount === 'number'
+      ? c.documentCount
+      : typeof c.document_count === 'number'
+      ? c.document_count
+      : (c?.data?.documentCount ?? 0);
+
+  const analysisCount =
+    typeof c.analysisCount === 'number'
+      ? c.analysisCount
+      : typeof c.analysis_count === 'number'
+      ? c.analysis_count
+      : (c?.data?.analysisCount ?? 0);
+
+  return {
+    ...c,
+    documentCount,
+    analysisCount,
+    title: c.title ?? 'Untitled Case',
+    status: c.status ?? 'active',
+    priority: c.priority ?? 'medium',
+    type: c.type ?? 'other',
+  };
+});
+
+
+    console.log("📂 Normalized cases:", normalized);
+
+    return {
+      success: true,
+      data: { cases: normalized },
+    };
   } catch (err) {
-    console.error('Error fetching cases:', err);
+    console.error('❌ Error fetching cases:', err);
     throw err;
   }
 }
+
 
 /**
  * Get a single case by ID
@@ -102,6 +149,32 @@ export async function runCaseAnalysis(caseId) {
     throw err;
   }
 }
+
+/* ---------------------------------------------------------
+ * 🧠 CASE ANALYSIS SERVICE (Cloud Run: case-analysis-service)
+ * --------------------------------------------------------- */
+
+/**
+ * Fetch or trigger AI analysis directly from the Case Analysis Service.
+ * Uses your deployed Cloud Run endpoint (VITE_CASE_ANALYSIS_API_URL).
+ */
+export async function getCaseAnalysis(caseId) {
+  if (!caseId) throw new Error('Case ID is required');
+
+  try {
+    const response = await request(VITE_CASE_ANALYSIS_API_URL, `/analyze`, {
+      method: 'POST',
+      body: JSON.stringify({ caseId, analysisType: 'comprehensive' }),
+    });
+
+    console.log('✅ Case analysis retrieved successfully:', response);
+    return response.data || response;
+  } catch (error) {
+    console.error('❌ Error fetching case analysis from Case Analysis Service:', error);
+    throw error;
+  }
+}
+
 
 /* ---------------------------------------------------------
  * 📄 DOCUMENT MANAGEMENT (Local: document-service)
@@ -170,33 +243,88 @@ export async function uploadDocument(file, caseId, userId) {
  */
 export async function getDocumentPreview(documentId) {
   if (!documentId) throw new Error('Document ID is required');
+
   try {
-    const preview = await request(DOCUMENT_API_URL, `/documents/${documentId}/preview`, { method: 'GET' });
+    const preview = await request(
+      DOCUMENT_API_URL,
+      `/documents/${documentId}/preview`,
+      { method: 'GET' }
+    );
+
     console.log('✅ Preview loaded:', preview);
-    return preview.content || 'No preview available.';
+
+    // ✅ Extract content from multiple possible structures
+    const content =
+      preview?.data?.textPreview?.content ||   // your actual case
+      preview?.data?.content ||
+      preview?.content ||
+      preview?.summary ||
+      'No preview available.';
+
+    return content;
   } catch (error) {
     console.error('❌ Error getting preview:', error);
-    throw error;
+    return 'No preview available.';
   }
 }
 
+
+/**
+ * Run AI analysis on a document
+ */
 /**
  * Run AI analysis on a document
  */
 export async function analyzeDocument(documentId) {
   if (!documentId) throw new Error('Document ID is required');
   try {
-    const analysis = await request(ANALYSIS_API_URL, `/analyze`, {
+    const token = await getAuthToken();
+
+    const res = await fetch(`${ANALYSIS_API_URL}/analyze`, {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify({ documentId, analysisType: 'full' }),
     });
-    console.log('✅ Document analysis complete:', analysis);
-    return analysis.data || analysis;
+
+    const text = await res.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      console.warn('⚠️ Non-JSON response received from /analyze:', text);
+      throw new Error('Invalid response from AI analysis service');
+    }
+
+    if (!res.ok) {
+      console.error('❌ API Error in analyzeDocument:', data);
+      throw new Error(data?.error || 'AI Analysis failed');
+    }
+
+    // 🔧 Fix: remove Firestore Sentinel / Timestamp only
+    const cleaned = JSON.parse(
+      JSON.stringify(data, (_k, v) => {
+        if (
+          v &&
+          typeof v === 'object' &&
+          (v._seconds || v._nanoseconds || v.protobuf || v.timestamp)
+        ) {
+          return null;
+        }
+        return v;
+      })
+    );
+
+    console.log('✅ Document analysis complete:', cleaned);
+    return cleaned.data || cleaned;
   } catch (error) {
     console.error('❌ Error analyzing document:', error);
     throw error;
   }
 }
+
 
 
 /**
@@ -215,6 +343,39 @@ export async function exportAnalysisPDF(caseId) {
 
   return await res.blob();
 }
+
+/* ---------------------------------------------------------
+ * 🤖 AI AGENT SERVICE (Local: ai-agent-service)
+ * --------------------------------------------------------- */
+
+/**
+ * Get list of available AI agents
+ */
+export async function getAIAgents() {
+  try {
+    const response = await request(AI_AGENT_API_URL, '/agents', { method: 'GET' });
+    console.log('✅ AI Agents fetched:', response.agents);
+    return response.agents || [];
+  } catch (error) {
+    console.error('❌ Error fetching AI agents:', error);
+    return [];
+  }
+}
+
+/**
+ * Health check for AI Agent Service
+ */
+export async function getAIAgentHealth() {
+  try {
+    const response = await request(AI_AGENT_API_URL, '/health', { method: 'GET' });
+    console.log('✅ AI Agent Service is healthy:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ AI Agent Service is not reachable:', error);
+    throw error;
+  }
+}
+
 
 /* ---------------------------------------------------------
  * 🧩 MOCK DATA BELOW (Optional fallback)

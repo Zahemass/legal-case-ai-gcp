@@ -5,6 +5,7 @@ import re
 from typing import Dict, Any, List, Optional
 import nltk
 import textstat
+from typer import prompt
 from gemini_client import GeminiClient
 
 logger = logging.getLogger(__name__)
@@ -158,18 +159,30 @@ class DocumentAnalyzer:
         try:
             filename = document_data.get('filename', 'Unknown')
             content_type = document_data.get('contentType', 'unknown')
-            
-            # Create analysis prompt
+
+            # Step 1: Create analysis prompt
             prompt = self._create_analysis_prompt(text, filename, content_type)
-            
-            # Get AI analysis
+
+            # Step 2: Get AI analysis response
             ai_response = self.gemini_client.analyze_document(prompt)
-            
+
             if not ai_response:
                 return {'summary': 'Analysis unavailable', 'keyPoints': [], 'legalRelevance': ''}
-            
-            return self._parse_ai_response(ai_response)
-            
+
+            # Step 3: Parse main AI analysis
+            results = self._parse_ai_response(ai_response)
+
+            # Step 4: Get structured legal relevance / analysis
+            legal_relevance = self.gemini_client.assess_legal_relevance(text, filename)
+            if legal_relevance:
+                results['legalRelevance'] = legal_relevance.get("summary", "")
+                results['legalAnalysis'] = legal_relevance
+            else:
+                results['legalRelevance'] = "No detailed legal analysis available."
+                results['legalAnalysis'] = {}
+
+            return results
+
         except Exception as e:
             logger.error(f"Gemini analysis error: {e}")
             return {
@@ -179,77 +192,136 @@ class DocumentAnalyzer:
                 'aiError': str(e)
             }
 
+
     def _create_analysis_prompt(self, text: str, filename: str, content_type: str) -> str:
-        """Create a comprehensive analysis prompt for Gemini"""
-        # Truncate text if too long
-        max_text_length = 8000
-        if len(text) > max_text_length:
-            text = text[:max_text_length] + "... [truncated]"
-        
-        prompt = f"""
-        Please analyze the following legal document and provide a comprehensive analysis:
+            """Create a detailed legal analysis prompt for Gemini."""
+            max_text_length = 12000
+            if len(text) > max_text_length:
+             text = text[:max_text_length]
 
-        Document Information:
-        - Filename: {filename}
-        - Type: {content_type}
-        - Length: {len(text)} characters
+            prompt = f"""
+You are a **Legal Document Analysis AI**. 
+Read the following document and return a **structured JSON response only** — no markdown, explanations, or commentary.
 
-        Document Content:
-        {text}
+The JSON must follow this schema exactly:
 
-        Please provide your analysis in the following JSON format:
-        {{
-            "summary": "A concise 2-3 sentence summary of the document",
-            "keyPoints": ["List of 3-7 key points or main ideas"],
-            "legalRelevance": "Assessment of legal significance and implications",
-            "documentType": "Classification of document type (contract, legal brief, etc.)",
-            "parties": ["List of parties mentioned in the document"],
-            "dates": ["Important dates mentioned"],
-            "obligations": ["Key obligations or requirements identified"],
-            "risks": ["Potential legal risks or issues"],
-            "recommendations": ["2-4 actionable recommendations"]
-        }}
+{{
+  "summary": "Concise 2-3 sentence legal summary.",
+  "keyPoints": ["Key point 1", "Key point 2", ...],
+  "legalRelevance": "2-3 sentences on legal importance or implications.",
+  "entities": {{
+    "people": ["List of individuals involved (e.g., plaintiffs, defendants, judges)"],
+    "organizations": ["Courts, firms, companies, agencies"],
+    "locations": ["Cities, addresses, places"],
+    "dates": ["Dates of events or filings"],
+    "amounts": ["Monetary or quantitative amounts"]
+  }},
+  "risks": ["Contradictions, missing details, compliance risks"],
+  "recommendations": ["Practical next steps or legal advice"],
+  "credibility": 0-100
+}}
 
-        Focus on legal implications, key clauses, obligations, and potential issues.
-        """
-        
-        return prompt
+Guidelines:
+- Focus on factual details from the text.
+- Ensure **people** are *real persons or named individuals*, not labels like "The Defense" or "Case Closed".
+- If unsure about an entity type, omit it.
+- Keep names and legal sections exactly as written.
+- Return only **valid JSON** (no extra commentary).
+
+Document name: {filename}
+Content type: {content_type}
+
+Document content:
+---
+{text}
+---
+Return only the JSON object.
+"""
+            return prompt
+    def _create_legal_relevance_prompt(self, text: str, filename: str) -> str:
+     """
+     Create a structured prompt for legal relevance & analysis.
+     Produces reasoning aligned with case outcomes, risks, and recommendations.
+     """
+     max_text_length = 10000
+     if len(text) > max_text_length:
+         text = text[:max_text_length]
+
+     prompt = f"""
+You are a **legal reasoning AI assistant**. Analyze the following document and return a JSON response only (no markdown, no explanations).
+
+The JSON must follow this schema:
+{{
+  "legalAnalysis": {{
+    "summary": "Brief overview of the document’s legal context.",
+    "issues": ["Key legal issues or disputes identified"],
+    "arguments": {{
+      "plaintiff": ["Main arguments made by the plaintiff or claimant"],
+      "defendant": ["Main arguments made by the defendant or respondent"]
+    }},
+    "verdictOrOutcome": "Describe the judgment, verdict, or likely outcome if applicable.",
+    "lawsOrSectionsCited": ["Relevant legal sections, acts, or precedents referenced"],
+    "risks": ["Potential legal risks, contradictions, or weak arguments"],
+    "recommendations": ["Actionable recommendations for legal teams or compliance officers"],
+    "confidenceScore": 0-100
+  }}
+}}
+
+Guidelines:
+- Use precise legal language (avoid narrative tone).
+- If certain fields aren’t available, return them as empty arrays.
+- If it’s not a judgment or verdict, infer implications based on the facts.
+- Extract only meaningful data — avoid placeholders like "N/A" or "none".
+- Return only the JSON object.
+
+Document name: {filename}
+
+Document content:
+---
+{text}
+---
+Return only the JSON object.
+"""
+     return prompt
+
 
     def _parse_ai_response(self, response: str) -> Dict[str, Any]:
-        """Parse and validate AI response"""
-        try:
-            # Try to extract JSON from response
-            import json
-            
-            # Look for JSON in the response
-            json_start = response.find('{')
-            json_end = response.rfind('}') + 1
-            
-            if json_start >= 0 and json_end > json_start:
-                json_str = response[json_start:json_end]
-                parsed = json.loads(json_str)
-                
-                # Validate required fields
-                result = {
-                    'summary': parsed.get('summary', 'No summary provided'),
-                    'keyPoints': parsed.get('keyPoints', []),
-                    'legalRelevance': parsed.get('legalRelevance', 'Legal relevance not determined'),
-                    'documentType': parsed.get('documentType', 'Unknown'),
-                    'parties': parsed.get('parties', []),
-                    'dates': parsed.get('dates', []),
-                    'obligations': parsed.get('obligations', []),
-                    'risks': parsed.get('risks', []),
-                    'recommendations': parsed.get('recommendations', [])
-                }
-                
-                return result
-            else:
-                # If no JSON, parse as text
-                return self._parse_text_response(response)
-                
-        except Exception as e:
-            logger.warning(f"Failed to parse AI response as JSON: {e}")
-            return self._parse_text_response(response)
+     import json
+     try:
+         clean = response.strip()
+         if clean.startswith("```"):
+            clean = clean.strip("`").replace("json", "")
+         clean = clean.strip()
+
+         json_start = clean.find("{")
+         json_end = clean.rfind("}") + 1
+         parsed = json.loads(clean[json_start:json_end])
+
+        # Normalize nested structure
+         entities = parsed.get("entities", {})
+         if isinstance(entities, list):
+            entities = {"people": entities, "organizations": [], "locations": [], "dates": [], "amounts": []}
+         else:
+            for key in ["people", "organizations", "locations", "dates", "amounts"]:
+                entities[key] = entities.get(key, [])
+
+         result = {
+            "summary": parsed.get("summary", "No summary available")[:400],
+            "keyPoints": parsed.get("keyPoints", []),
+            "legalRelevance": parsed.get("legalRelevance", ""),
+            "entities": entities,
+            "risks": parsed.get("risks", []),
+            "recommendations": parsed.get("recommendations", []),
+            "credibility": parsed.get("credibility", 60)
+        }
+         return result
+
+     except json.JSONDecodeError as e:
+        logger.warning(f"⚠️ Gemini returned malformed JSON: {e}")
+        return {"summary": response[:200], "keyPoints": [], "entities": {}, "credibility": 0}
+     except Exception as e:
+        logger.error(f"Failed to parse Gemini response: {e}")
+        return {"summary": "Parsing failed", "keyPoints": [], "entities": {}, "credibility": 0}
 
     def _parse_text_response(self, response: str) -> Dict[str, Any]:
         """Parse AI response as plain text"""

@@ -121,14 +121,22 @@ exports.getCases = async (req, res) => {
     }
 
     // Document counts (optional)
-    for (let c of cases) {
-      const docsSnapshot = await firestore
-        .collection(DOCUMENTS_COLLECTION)
-        .where('caseId', '==', c.id)
-        .where('status', 'in', ['active', 'processed', 'pending'])
-        .get();
-      c.documentCount = docsSnapshot.size;
-    }
+    // ✅ Fix: Use existing Firestore field if available, fallback to live count
+for (let c of cases) {
+  // Prefer Firestore-stored field first
+  if (typeof c.documentCount === 'number' && c.documentCount >= 0) {
+    continue; // skip recalculating if already in Firestore
+  }
+
+  const docsSnapshot = await firestore
+    .collection(DOCUMENTS_COLLECTION)
+    .where('caseId', '==', c.id)
+    .where('status', 'in', ['active', 'processed', 'pending'])
+    .get();
+
+  c.documentCount = docsSnapshot.size || 0;
+}
+
 
     // ✅ FIXED: Count query without unsupported filters
     const totalSnapshot = await firestore

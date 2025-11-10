@@ -177,36 +177,50 @@ class GeminiClient:
             logger.error(f"❌ Key points extraction error: {e}")
             return []
 
-    def assess_legal_relevance(self, text: str) -> Optional[str]:
-        """Assess the legal relevance of the text"""
-        try:
-            prompt = f"""
-            As a legal expert, please assess the legal relevance and significance of the following document.
-            Consider:
-            - Legal implications
-            - Potential risks or issues
-            - Compliance requirements
-            - Contractual obligations
-            - Regulatory considerations
+    def assess_legal_relevance(self, text: str, filename: str = "Unknown") -> Optional[Dict[str, Any]]:
+       """Assess the legal relevance and significance of a document using structured output."""
+       try:
+        from analyzer import DocumentAnalyzer  # Local import to reuse prompt style dynamically
+        temp_analyzer = DocumentAnalyzer(self, None)
+        prompt = temp_analyzer._create_legal_relevance_prompt(text, filename)
 
-            Document:
-            {text[:8000]}
+        response = self.model.generate_content(
+            prompt,
+            generation_config=self.generation_config,
+            safety_settings=self.safety_settings
+        )
 
-            Please provide a professional assessment in 2-3 paragraphs.
-            """
-            
-            response = self.model.generate_content(
-                prompt,
-                generation_config=self.generation_config,
-                safety_settings=self.safety_settings
-            )
-            
-            if response.text:
-                return response.text.strip()
-            
+        if not response.text:
+            logger.warning("⚠️ Empty legal relevance response")
             return None
+
+        clean = response.text.strip()
+        if clean.startswith("```"):
+            clean = clean.strip("`").replace("json", "")
+        clean = clean.strip()
+
+        import json
+        json_start = clean.find("{")
+        json_end = clean.rfind("}") + 1
+        parsed = json.loads(clean[json_start:json_end])
+
+        return parsed.get("legalAnalysis", parsed)
+
+       except Exception as e:
+        logger.error(f"❌ Legal relevance analysis error: {e}")
+        return {
+            "summary": "Unable to generate structured legal analysis.",
+            "issues": [],
+            "arguments": {"plaintiff": [], "defendant": []},
+            "verdictOrOutcome": "",
+            "lawsOrSectionsCited": [],
+            "risks": [],
+            "recommendations": [],
+            "confidenceScore": 0
+        }
+
             
-        except Exception as e:
+       except Exception as e:
             logger.error(f"❌ Legal relevance assessment error: {e}")
             return None
 

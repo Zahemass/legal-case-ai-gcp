@@ -1,3 +1,4 @@
+#services/ai-agent-service/src/agents/draft_agent.py
 import logging
 import time
 from typing import Dict, Any, List, Optional
@@ -18,7 +19,7 @@ class DraftAgent:
             api_key = os.environ.get('GOOGLE_AI_API_KEY')
             if api_key:
                 genai.configure(api_key=api_key)
-                self.model = genai.GenerativeModel('gemini-1.5-flash')
+                self.model = genai.GenerativeModel('gemini-2.5-pro')
             else:
                 self.model = None
                 logger.warning("⚠️ Gemini API key not found, using fallback responses")
@@ -455,3 +456,124 @@ class DraftAgent:
 
     def _get_legal_letter_template(self) -> str:
         return "📧 **Legal Letter Template**"
+
+    def _get_motion_template(self) -> str:
+        return """⚖️ **Motion Template**
+
+[COURT NAME]
+[CITY, STATE]
+
+CASE NO: [Insert Case Number]
+
+PLAINTIFF: [Insert Plaintiff Name]
+v.
+DEFENDANT: [Insert Defendant Name]
+
+**MOTION TITLE**
+e.g., Motion to Dismiss / Motion for Summary Judgment
+
+**1. Introduction**
+Briefly describe the motion and its purpose.
+
+**2. Statement of Facts**
+Summarize the background facts relevant to the motion.
+
+**3. Legal Argument**
+Present the legal basis for the motion, citing authorities.
+
+**4. Conclusion**
+State the relief sought.
+
+**5. Signature**
+[Attorney Name, Firm, Bar Number, Date]
+"""
+
+    def _get_brief_template(self) -> str:
+        return """📜 **Legal Brief Template**
+
+**TABLE OF CONTENTS**
+[List all sections with page numbers]
+
+**I. Statement of the Case**
+Brief overview of the case background.
+
+**II. Statement of Facts**
+Summarize all relevant facts and evidence.
+
+**III. Issues Presented**
+List the legal issues to be addressed.
+
+**IV. Summary of Argument**
+Concise overview of your main arguments.
+
+**V. Argument**
+Detailed legal analysis with citations and authorities.
+
+**VI. Conclusion**
+Summarize and restate the requested relief.
+"""
+
+    def _get_contract_review_template(self) -> str:
+        return """📋 **Contract Review Template**
+
+**1. Overview**
+Purpose of the agreement and parties involved.
+
+**2. Key Clauses Summary**
+Summarize key clauses and highlight critical terms.
+
+**3. Risk Analysis**
+Identify potential legal and commercial risks.
+
+**4. Recommendations**
+Suggest amendments or negotiation points.
+
+**5. Conclusion**
+Provide next steps or approval notes.
+"""
+
+    def _get_memo_template(self) -> str:
+        return """📝 **Legal Memorandum Template**
+
+TO: [Recipient]
+FROM: [Author]
+DATE: [Date]
+RE: [Subject]
+
+**Question Presented**
+State the legal issue in question form.
+
+**Brief Answer**
+Provide a short answer or conclusion.
+
+**Facts**
+Summarize the relevant facts.
+
+**Discussion**
+Provide detailed legal analysis, citing relevant laws and cases.
+
+**Conclusion**
+Summarize the findings and recommendations.
+"""
+
+    def _get_response_template(self) -> str:
+        return """↩️ **Response Template**
+
+**1. Heading**
+Case caption and title.
+
+**2. Introduction**
+Acknowledge the motion or issue being responded to.
+
+**3. Response**
+Provide point-by-point replies to each argument or claim.
+
+**4. Legal Support**
+Cite applicable laws and precedents supporting your stance.
+
+**5. Conclusion**
+Summarize your position and requested outcome.
+
+**6. Signature Block**
+[Attorney Name, Firm, Bar Number, Date]
+"""

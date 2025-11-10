@@ -1,3 +1,4 @@
+#services/ai-agent-service/src/agents/summary_agent.py
 import logging
 import time
 from typing import Dict, Any, List, Optional
@@ -18,7 +19,7 @@ class SummaryAgent:
             api_key = os.environ.get('GOOGLE_AI_API_KEY')
             if api_key:
                 genai.configure(api_key=api_key)
-                self.model = genai.GenerativeModel('gemini-1.5-flash')
+                self.model = genai.GenerativeModel('gemini-2.5-pro')
             else:
                 self.model = None
                 logger.warning("⚠️ Gemini API key not found, using fallback responses")

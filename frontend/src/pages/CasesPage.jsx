@@ -21,7 +21,6 @@ export default function CasesPage() {
       setLoading(true);
       const response = await getCases(currentUser.uid);
 
-      // ✅ Handle backend shape: { success, data: { cases, pagination } }
       if (response.success && Array.isArray(response.data?.cases)) {
         setCases(response.data.cases);
       } else {
@@ -36,10 +35,10 @@ export default function CasesPage() {
     }
   };
 
-  const handleCaseCreated = (newCase) => {
-    setCases((prev) => (Array.isArray(prev) ? [...prev, newCase] : [newCase]));
-    setShowCreateDialog(false);
-  };
+  const handleCaseCreated = async () => {
+  setShowCreateDialog(false);
+  await loadCases(); // ✅ Force reload from backend so you get the proper title & ID
+};
 
   return (
     <div className="cases-page">
@@ -61,7 +60,11 @@ export default function CasesPage() {
         {loading ? (
           <div className="loading">Loading cases...</div>
         ) : (
-          <CaseList cases={cases} onCaseUpdate={loadCases} />
+          <CaseList 
+            cases={cases} 
+            onCaseUpdate={loadCases} 
+            onRefresh={loadCases} // ✅ Added refresh support
+          />
         )}
       </Container>
 
