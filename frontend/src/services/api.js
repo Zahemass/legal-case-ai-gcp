@@ -10,13 +10,7 @@ const ANALYSIS_API_URL = import.meta.env.VITE_ANALYSIS_API_URL || 'http://localh
 const VITE_CASE_ANALYSIS_API_URL = import.meta.env.VITE_CASE_ANALYSIS_API_URL || 'http://localhost:8080';
 const AI_AGENT_API_URL = import.meta.env.VITE_AI_AGENT_API_URL || 'http://localhost:8080';
 
-// ✅ Log API configuration
-console.log('🔧 API Configuration:');
-console.log('   Case API:', CASE_API_URL);
-console.log('   Document API:', DOCUMENT_API_URL);
-console.log('   Analysis API:', ANALYSIS_API_URL);
-console.log('   Case Analysis API:', VITE_CASE_ANALYSIS_API_URL);
-console.log('   AI Agent API:', AI_AGENT_API_URL);
+
 
 async function getAuthToken() {
   const user = auth.currentUser;
