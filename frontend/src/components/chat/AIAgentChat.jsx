@@ -1,46 +1,32 @@
+// frontend/src/components/chat/AIAgentChat.jsx
 import React, { useState, useEffect, useRef } from 'react';
-import { io } from 'socket.io-client';
 import ChatMessage from './ChatMessage';
 import { useAuth } from '../../contexts/AuthContext';
 import './AIAgentChat.css';
+
+const AI_API_URL = import.meta.env.VITE_AI_AGENT_API_URL || 'http://localhost:8080';
 
 export default function AIAgentChat({ caseId }) {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [streamingMessageId, setStreamingMessageId] = useState(null);
   const [aiStatusText, setAiStatusText] = useState('');
-  const [connectionStatus, setConnectionStatus] = useState('connecting');
 
-  const aiStatusIndexRef = useRef(0);
-  const aiStatusTimerRef = useRef(null);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
   const { currentUser } = useAuth();
-  const wsRef = useRef(null);
 
-  // 🔌 Initialize WebSocket connection
+  // Load chat history on mount
   useEffect(() => {
-    if (!caseId || !currentUser) return;
-    connectSocket();
+    if (caseId) {
+      loadChatHistory();
+    }
+  }, [caseId]);
 
-    return () => {
-      if (wsRef.current) {
-        wsRef.current.disconnect();
-        wsRef.current = null;
-        console.log('🔴 Socket.IO disconnected on cleanup');
-      }
-      if (aiStatusTimerRef.current) {
-        clearInterval(aiStatusTimerRef.current);
-      }
-    };
-  }, [caseId, currentUser]);
-
-  // 🔽 Scroll down whenever messages change
+  // Scroll to bottom when messages change
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isStreaming]);
+  }, [messages]);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -50,40 +36,18 @@ export default function AIAgentChat({ caseId }) {
     }
   }, [inputMessage]);
 
-  const connectSocket = () => {
-    setConnectionStatus('connecting');
-    
-    const socket = io(import.meta.env.VITE_WS_URL, {
-      transports: ['websocket'],
-      reconnection: true,
-      reconnectionAttempts: 10,
-      reconnectionDelay: 3000,
-      timeout: 90000,
-      pingTimeout: 120000,
-      pingInterval: 25000,
-      auth: {
-        userId: currentUser?.uid,
-        caseId: caseId,
-      },
-    });
-
-    wsRef.current = socket;
-
-    // ✅ Connected
-    socket.on('connect', () => {
-      console.log('✅ Socket.IO connected:', socket.id);
-      setConnectionStatus('connected');
-
-      socket.emit('join_case', {
-        caseId: caseId,
-        userId: currentUser?.uid,
-      });
-
-      setMessages([
-        {
-          id: 1,
-          type: 'ai',
-          content: `Hello! 👋 I'm your **AI Legal Assistant** for this case.
+  const loadChatHistory = async () => {
+    try {
+      console.log('📚 Loading chat history...');
+      const response = await fetch(`${AI_API_URL}/chat/history/${caseId}`);
+      const data = await response.json();
+      
+      if (data.success && data.messages) {
+        setMessages([
+          {
+            id: 0,
+            type: 'ai',
+            content: `Hello! 👋 I'm your **AI Legal Assistant** for this case.
 
 I can help you with:
 
@@ -93,136 +57,117 @@ I can help you with:
 - ⚖️ **Legal Questions** - Answer general legal inquiries
 
 *How can I assist you today?*`,
-          timestamp: new Date(),
-          agent: 'general',
-        },
-      ]);
-    });
-
-    // 📩 AI message received (streaming support)
-    socket.on('message_received', (data) => {
-      console.log('📩 Received from AI Agent:', data);
-
-      if (data.userId === currentUser?.uid) return;
-
-      const messageType = data.type === 'ai' ? 'ai' : 'user';
-      const newMessageId = data.id || Date.now();
-
-      // Check if this is a streaming message
-      if (data.streaming) {
-        setIsStreaming(true);
-        setStreamingMessageId(newMessageId);
-      }
-
-      setMessages((prev) => {
-        // Update existing streaming message or add new one
-        const existingIndex = prev.findIndex(m => m.id === newMessageId);
-        
-        if (existingIndex !== -1) {
-          const updated = [...prev];
-          updated[existingIndex] = {
-            ...updated[existingIndex],
-            content: data.message,
-          };
-          return updated;
-        }
-
-        return [
-          ...prev,
-          {
-            id: newMessageId,
-            type: messageType,
-            content: data.message,
-            agent: data.agent,
-            timestamp: new Date(data.timestamp * 1000 || Date.now()),
+            timestamp: new Date(),
+            agent: 'general',
           },
-        ];
-      });
-
-      // Stop streaming when message is complete
-      if (!data.streaming) {
-        setIsStreaming(false);
-        setStreamingMessageId(null);
-        setIsTyping(false);
-        setAiStatusText('');
-        if (aiStatusTimerRef.current) clearInterval(aiStatusTimerRef.current);
+          ...data.messages.map(msg => ({
+            id: msg.id,
+            type: msg.type,
+            content: msg.message,
+            timestamp: msg.timestamp ? new Date(msg.timestamp._seconds * 1000) : new Date(),
+            agent: msg.type === 'ai' ? 'general' : undefined
+          }))
+        ]);
       }
-    });
-
-    // 🧠 AI starts thinking
-    socket.on('ai_thinking', () => {
-      setIsTyping(true);
-      const statusMessages = [
-        '🤖 Initializing AI agents...',
-        '🧠 Gemini analyzing your request...',
-        '⚖️ Processing case context...',
-        '📚 Researching legal precedents...',
-        '📄 Drafting response...',
-        '✨ Finalizing answer...',
-      ];
-
-      aiStatusIndexRef.current = 0;
-      setAiStatusText(statusMessages[0]);
-
-      if (aiStatusTimerRef.current) clearInterval(aiStatusTimerRef.current);
-      aiStatusTimerRef.current = setInterval(() => {
-        aiStatusIndexRef.current =
-          (aiStatusIndexRef.current + 1) % statusMessages.length;
-        setAiStatusText(statusMessages[aiStatusIndexRef.current]);
-      }, 45000);
-    });
-
-    // ✅ AI finished thinking
-    socket.on('ai_thinking_stop', () => {
-      setIsTyping(false);
-      setAiStatusText('');
-      if (aiStatusTimerRef.current) clearInterval(aiStatusTimerRef.current);
-    });
-
-    // ⚠️ Connection handling
-    socket.on('connect_error', (err) => {
-      console.error('⚠️ Socket connection error:', err.message);
-      setConnectionStatus('error');
-    });
-
-    socket.on('disconnect', (reason) => {
-      console.warn('❌ Socket disconnected:', reason);
-      setConnectionStatus('disconnected');
-      setIsTyping(false);
-      setIsStreaming(false);
-      setAiStatusText('');
-    });
-
-    socket.on('reconnect', (attempt) => {
-      console.log(`🔁 Reconnected after ${attempt} attempts`);
-      setConnectionStatus('connected');
-      setAiStatusText('');
-    });
+    } catch (error) {
+      console.error('❌ Error loading history:', error);
+    }
   };
 
-  // ✉️ Send message to backend
-  const sendMessage = () => {
-    if (!inputMessage.trim() || !wsRef.current || isTyping) return;
+  const sendMessage = async () => {
+    const trimmedMessage = inputMessage.trim();
+    
+    console.log('\n🚀 SENDING MESSAGE');
+    console.log('   Message:', trimmedMessage);
+    console.log('   Case ID:', caseId);
+    console.log('   User ID:', currentUser?.uid);
+    
+    if (!trimmedMessage) {
+      console.log('⚠️ Empty message');
+      return;
+    }
+    
+    if (!caseId || !currentUser?.uid) {
+      console.error('❌ Missing case ID or user ID');
+      return;
+    }
 
-    const message = {
-      message: inputMessage.trim(),
-      caseId,
-      userId: currentUser?.uid,
+    if (isTyping) {
+      console.log('⚠️ AI is typing, please wait');
+      return;
+    }
+
+    // Add user message to UI immediately
+    const userMessage = {
+      id: Date.now(),
+      type: 'user',
+      content: trimmedMessage,
+      timestamp: new Date(),
     };
-
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        type: 'user',
-        content: inputMessage,
-        timestamp: new Date(),
-      },
-    ]);
-
+    
+    setMessages(prev => [...prev, userMessage]);
     setInputMessage('');
     setIsTyping(true);
-    wsRef.current.emit('send_message', message);
+    setAiStatusText('🤖 AI is thinking...');
+
+    try {
+      console.log('📤 Sending HTTP POST request...');
+      const startTime = Date.now();
+      
+      const response = await fetch(`${AI_API_URL}/chat/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: trimmedMessage,
+          caseId: caseId,
+          userId: currentUser.uid,
+        }),
+      });
+
+      const responseTime = Date.now() - startTime;
+      console.log(`✅ Response received in ${responseTime}ms`);
+
+      const data = await response.json();
+      
+      if (data.success) {
+        // Add AI response
+        const aiMessage = {
+          id: Date.now() + 1,
+          type: 'ai',
+          content: data.message,
+          agent: data.agent || 'general',
+          timestamp: new Date(data.timestamp * 1000),
+        };
+        
+        setMessages(prev => [...prev, aiMessage]);
+        console.log('✅ AI response added to UI');
+      } else {
+        console.error('❌ API error:', data.error);
+        // Add error message
+        setMessages(prev => [...prev, {
+          id: Date.now() + 1,
+          type: 'ai',
+          content: 'I apologize, but I encountered an error. Please try again.',
+          agent: 'error',
+          timestamp: new Date(),
+        }]);
+      }
+      
+    } catch (error) {
+      console.error('❌ Network error:', error);
+      setMessages(prev => [...prev, {
+        id: Date.now() + 1,
+        type: 'ai',
+        content: 'Connection error. Please check your internet and try again.',
+        agent: 'error',
+        timestamp: new Date(),
+      }]);
+    } finally {
+      setIsTyping(false);
+      setAiStatusText('');
+    }
   };
 
   const handleKeyPress = (e) => {
@@ -243,13 +188,13 @@ I can help you with:
 
   return (
     <div className="ai-chat">
-      {/* Header with Dark Mode Toggle */}
+      {/* Header */}
       <div className="ai-chat__header">
         <div className="ai-chat__header-gradient"></div>
         <div className="ai-chat__header-content">
           <div className="ai-chat__header-icon">
             <span className="ai-chat__icon-emoji">⚖️</span>
-            <span className="ai-chat__status-indicator" data-status={connectionStatus}>
+            <span className="ai-chat__status-indicator" data-status="connected">
               <span className="ai-chat__status-dot"></span>
               <span className="ai-chat__status-ring"></span>
             </span>
@@ -259,30 +204,8 @@ I can help you with:
               <span className="ai-chat__title-gradient">AI Legal Assistant</span>
             </h2>
             <p className="ai-chat__subtitle">
-              {connectionStatus === 'connected' && (
-                <>
-                  <span className="ai-chat__status-badge ai-chat__status-badge--online">Online</span>
-                  Ready to assist with your case
-                </>
-              )}
-              {connectionStatus === 'connecting' && (
-                <>
-                  <span className="ai-chat__status-badge ai-chat__status-badge--connecting">Connecting</span>
-                  Establishing connection...
-                </>
-              )}
-              {connectionStatus === 'disconnected' && (
-                <>
-                  <span className="ai-chat__status-badge ai-chat__status-badge--offline">Offline</span>
-                  Connection lost
-                </>
-              )}
-              {connectionStatus === 'error' && (
-                <>
-                  <span className="ai-chat__status-badge ai-chat__status-badge--error">Error</span>
-                  Connection failed
-                </>
-              )}
+              <span className="ai-chat__status-badge ai-chat__status-badge--online">Online</span>
+              Ready to assist with your case
             </p>
           </div>
         </div>
@@ -293,14 +216,10 @@ I can help you with:
         <div className="ai-chat__messages-bg"></div>
         <div className="ai-chat__messages-inner">
           {messages.map((message) => (
-            <ChatMessage 
-              key={message.id} 
-              message={message}
-              isStreaming={isStreaming && message.id === streamingMessageId}
-            />
+            <ChatMessage key={message.id} message={message} />
           ))}
 
-          {isTyping && !isStreaming && (
+          {isTyping && (
             <div className="ai-chat__typing">
               <div className="ai-chat__typing-avatar">
                 <span>🤖</span>
@@ -364,12 +283,12 @@ I can help you with:
               onKeyPress={handleKeyPress}
               placeholder="Ask me anything about your case..."
               rows={1}
-              disabled={isTyping || connectionStatus !== 'connected'}
+              disabled={isTyping}
             />
             <button
               className="ai-chat__send-button"
               onClick={sendMessage}
-              disabled={!inputMessage.trim() || isTyping || connectionStatus !== 'connected'}
+              disabled={!inputMessage.trim() || isTyping}
               aria-label="Send message"
             >
               <svg
