@@ -131,19 +131,7 @@ export default function ChatMessage({ message, isStreaming = false }) {
             {isStreaming && <span className="chat-message__cursor"></span>}
           </div>
 
-          {!isStreaming && (
-            <div className="chat-message__timestamp">
-              {message.timestamp instanceof Date
-                ? message.timestamp.toLocaleTimeString('en-US', { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                  })
-                : new Date(message.timestamp).toLocaleTimeString('en-US', { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                  })}
-            </div>
-          )}
+         
         </div>
       </div>
     </div>
