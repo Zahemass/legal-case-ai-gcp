@@ -4,14 +4,19 @@ import { auth } from '../firebase';
 /* ---------------------------------------------------------
  * ⚙️ Firebase Auth Helpers for Cloud Run + Local backend
  * --------------------------------------------------------- */
-// Cloud Run = case-service
-// Local (for now) = document-service
 const CASE_API_URL = import.meta.env.VITE_CASE_API_URL || 'http://localhost:8080';
 const DOCUMENT_API_URL = import.meta.env.VITE_DOCUMENT_API_URL || 'http://localhost:8080';
 const ANALYSIS_API_URL = import.meta.env.VITE_ANALYSIS_API_URL || 'http://localhost:8080';
 const VITE_CASE_ANALYSIS_API_URL = import.meta.env.VITE_CASE_ANALYSIS_API_URL || 'http://localhost:8080';
 const AI_AGENT_API_URL = import.meta.env.VITE_AI_AGENT_API_URL || 'http://localhost:8080';
 
+// ✅ Log API configuration
+console.log('🔧 API Configuration:');
+console.log('   Case API:', CASE_API_URL);
+console.log('   Document API:', DOCUMENT_API_URL);
+console.log('   Analysis API:', ANALYSIS_API_URL);
+console.log('   Case Analysis API:', VITE_CASE_ANALYSIS_API_URL);
+console.log('   AI Agent API:', AI_AGENT_API_URL);
 
 async function getAuthToken() {
   const user = auth.currentUser;
@@ -57,7 +62,6 @@ export async function getCases() {
   try {
     const response = await request(CASE_API_URL, '/cases', { method: 'GET' });
 
-    // 🔍 Handle both possible shapes: {data: {cases: [...]}} OR {cases: [...]}
     const cases = Array.isArray(response?.data?.cases)
       ? response.data.cases
       : Array.isArray(response?.cases)
@@ -67,32 +71,30 @@ export async function getCases() {
     console.log("🧾 Raw API cases:", cases);
 
     const normalized = cases.map((c) => {
-  // Ensure documentCount is pulled even if backend nests data or uses a fallback
-  const documentCount =
-    typeof c.documentCount === 'number'
-      ? c.documentCount
-      : typeof c.document_count === 'number'
-      ? c.document_count
-      : (c?.data?.documentCount ?? 0);
+      const documentCount =
+        typeof c.documentCount === 'number'
+          ? c.documentCount
+          : typeof c.document_count === 'number'
+          ? c.document_count
+          : (c?.data?.documentCount ?? 0);
 
-  const analysisCount =
-    typeof c.analysisCount === 'number'
-      ? c.analysisCount
-      : typeof c.analysis_count === 'number'
-      ? c.analysis_count
-      : (c?.data?.analysisCount ?? 0);
+      const analysisCount =
+        typeof c.analysisCount === 'number'
+          ? c.analysisCount
+          : typeof c.analysis_count === 'number'
+          ? c.analysis_count
+          : (c?.data?.analysisCount ?? 0);
 
-  return {
-    ...c,
-    documentCount,
-    analysisCount,
-    title: c.title ?? 'Untitled Case',
-    status: c.status ?? 'active',
-    priority: c.priority ?? 'medium',
-    type: c.type ?? 'other',
-  };
-});
-
+      return {
+        ...c,
+        documentCount,
+        analysisCount,
+        title: c.title ?? 'Untitled Case',
+        status: c.status ?? 'active',
+        priority: c.priority ?? 'medium',
+        type: c.type ?? 'other',
+      };
+    });
 
     console.log("📂 Normalized cases:", normalized);
 
@@ -105,7 +107,6 @@ export async function getCases() {
     throw err;
   }
 }
-
 
 /**
  * Get a single case by ID
@@ -156,7 +157,6 @@ export async function runCaseAnalysis(caseId) {
 
 /**
  * Fetch or trigger AI analysis directly from the Case Analysis Service.
- * Uses your deployed Cloud Run endpoint (VITE_CASE_ANALYSIS_API_URL).
  */
 export async function getCaseAnalysis(caseId) {
   if (!caseId) throw new Error('Case ID is required');
@@ -175,14 +175,10 @@ export async function getCaseAnalysis(caseId) {
   }
 }
 
-
 /* ---------------------------------------------------------
  * 📄 DOCUMENT MANAGEMENT (Local: document-service)
  * --------------------------------------------------------- */
 
-/**
- * Get all documents for a specific case
- */
 /**
  * Get all documents for a specific case
  */
@@ -193,10 +189,7 @@ export async function getDocuments(caseId) {
       method: 'GET',
     });
 
-    // ✅ Firestore response format:
-    // { success: true, data: { documents: [ ... ], caseId: "..." } }
     const docs = response?.data?.documents || [];
-
     console.log('✅ Documents fetched (flattened):', docs);
     return docs;
   } catch (error) {
@@ -204,7 +197,6 @@ export async function getDocuments(caseId) {
     return [];
   }
 }
-
 
 /**
  * Upload a document for a case
@@ -253,9 +245,8 @@ export async function getDocumentPreview(documentId) {
 
     console.log('✅ Preview loaded:', preview);
 
-    // ✅ Extract content from multiple possible structures
     const content =
-      preview?.data?.textPreview?.content ||   // your actual case
+      preview?.data?.textPreview?.content ||
       preview?.data?.content ||
       preview?.content ||
       preview?.summary ||
@@ -268,10 +259,6 @@ export async function getDocumentPreview(documentId) {
   }
 }
 
-
-/**
- * Run AI analysis on a document
- */
 /**
  * Run AI analysis on a document
  */
@@ -303,7 +290,6 @@ export async function analyzeDocument(documentId) {
       throw new Error(data?.error || 'AI Analysis failed');
     }
 
-    // 🔧 Fix: remove Firestore Sentinel / Timestamp only
     const cleaned = JSON.parse(
       JSON.stringify(data, (_k, v) => {
         if (
@@ -325,8 +311,6 @@ export async function analyzeDocument(documentId) {
   }
 }
 
-
-
 /**
  * Export analyzed results as PDF
  */
@@ -345,8 +329,74 @@ export async function exportAnalysisPDF(caseId) {
 }
 
 /* ---------------------------------------------------------
- * 🤖 AI AGENT SERVICE (Local: ai-agent-service)
+ * 🤖 AI AGENT SERVICE (REST API: ai-agent-service)
  * --------------------------------------------------------- */
+
+/**
+ * Send message to AI Agent and get response
+ */
+export async function sendAIMessage(caseId, userId, message) {
+  if (!caseId || !userId || !message) {
+    throw new Error('caseId, userId, and message are required');
+  }
+
+  try {
+    console.log('📤 Sending AI message:', { caseId, userId, message: message.substring(0, 50) });
+    
+    const response = await fetch(`${AI_AGENT_API_URL}/chat/send`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        caseId,
+        userId,
+        message,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to send message');
+    }
+
+    const data = await response.json();
+    console.log('✅ AI response received:', data);
+    return data;
+  } catch (error) {
+    console.error('❌ Error sending AI message:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get chat history for a case
+ */
+export async function getAIChatHistory(caseId) {
+  if (!caseId) throw new Error('Case ID is required');
+
+  try {
+    console.log('📚 Fetching chat history for case:', caseId);
+    
+    const response = await fetch(`${AI_AGENT_API_URL}/chat/history/${caseId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch chat history');
+    }
+
+    const data = await response.json();
+    console.log('✅ Chat history loaded:', data);
+    return data;
+  } catch (error) {
+    console.error('❌ Error fetching chat history:', error);
+    return { success: false, messages: [] };
+  }
+}
 
 /**
  * Get list of available AI agents
@@ -367,18 +417,24 @@ export async function getAIAgents() {
  */
 export async function getAIAgentHealth() {
   try {
-    const response = await request(AI_AGENT_API_URL, '/health', { method: 'GET' });
-    console.log('✅ AI Agent Service is healthy:', response);
-    return response;
+    const response = await fetch(`${AI_AGENT_API_URL}/health`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    const data = await response.json();
+    console.log('✅ AI Agent Service is healthy:', data);
+    return data;
   } catch (error) {
     console.error('❌ AI Agent Service is not reachable:', error);
     throw error;
   }
 }
 
-
 /* ---------------------------------------------------------
- * 🧩 MOCK DATA BELOW (Optional fallback)
+ * 🧩 MOCK DATA (Optional fallback)
  * --------------------------------------------------------- */
 
 const mockDelay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
