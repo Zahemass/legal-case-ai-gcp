@@ -19,6 +19,8 @@ export default function HomePage() {
 
   return (
     <div className="home-container">
+      
+      {/* HEADER */}
       <div className="header">
         <Container>
           <h1>Legal Case AI System</h1>
@@ -29,9 +31,11 @@ export default function HomePage() {
         </Container>
       </div>
       
+      {/* MAIN CARDS */}
       <main className="main-content">
         <Container>
           <Row className="dashboard-grid">
+
             <Col lg={3} md={6} className="mb-4">
               <div className="dashboard-card" onClick={() => navigate('/cases')}>
                 <div className="card-icon">📋</div>
@@ -39,7 +43,7 @@ export default function HomePage() {
                 <p>View and manage all your legal cases</p>
               </div>
             </Col>
-            
+
             <Col lg={3} md={6} className="mb-4">
               <div className="dashboard-card" onClick={() => navigate('/documents')}>
                 <div className="card-icon">📄</div>
@@ -47,15 +51,18 @@ export default function HomePage() {
                 <p>Upload and organize case documents</p>
               </div>
             </Col>
-            
+
             <Col lg={3} md={6} className="mb-4">
-              <div className="dashboard-card">
+              <div 
+                className="dashboard-card" 
+                onClick={() => navigate('/analysis')}
+              >
                 <div className="card-icon">🤖</div>
                 <h3>AI Analysis</h3>
-                <p>Get AI-powered insights on your cases</p>
+                <p>View all AI-powered insights</p>
               </div>
             </Col>
-            
+
             <Col lg={3} md={6} className="mb-4">
               <div className="dashboard-card">
                 <div className="card-icon">📊</div>
@@ -63,9 +70,11 @@ export default function HomePage() {
                 <p>Generate comprehensive case reports</p>
               </div>
             </Col>
+
           </Row>
         </Container>
       </main>
+
     </div>
   );
 }
